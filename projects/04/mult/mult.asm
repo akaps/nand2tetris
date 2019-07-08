@@ -21,27 +21,7 @@
     @END
     D; JEQ
 
-    D=M[R0]
-    D=D-M[R1]
-    @LOOP_DEC_R1
-    D; JLT // R0<R1, decreasing R0 is fewer loops than R1
-    //else, decreasing R1 is fewer loops than R0. Fall through
-
-(LOOP_DEC_R0)
-    //add R1 to the running total
-    D=M[R1]
-    D=D+M[R2]
-    M[R2]=D
-    //decrement R0
-    D=M[R0]
-    D=D-1
-    @END
-    D; JLE // R0 is <= 0
-    M[R0]=D
-    @LOOP_DEC_R0
-    D; JMP
-
-(LOOP_DEC_R1)
+(LOOP)
     //add R0 to the running total
     D=M[R0]
     D=D+M[R2]
@@ -52,7 +32,7 @@
     @END
     D; JLE // R1 is <= 0
     M[R1]=D
-    @LOOP_DEC_R1
+    @LOOP
     D; JMP
 
 (END)
