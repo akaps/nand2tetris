@@ -21,6 +21,19 @@
     @END
     D; JEQ
 
+    //if R0 < R1, perform swap (we decrement R1 in the loop)
+    D=M[R0]
+    D=D-M[R1]
+    @LOOP
+    D; JGT
+
+    D=M[R0]
+    M[R3]=D
+    D=M[R1]
+    M[R0]=D
+    D=M[R3]
+    M[R1]=D
+
 (LOOP)
     //add R0 to the running total
     D=M[R0]
