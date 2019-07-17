@@ -155,7 +155,6 @@ class Parser:
             else:
                 instruction += 1
         self.reset()
-        print(self.symbol_table.symbols)
 
     def parse_assembly(self):
         self.preprocess()
