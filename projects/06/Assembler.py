@@ -88,6 +88,36 @@ class Code:
         }
         return jumpcode[mnemonic]
 
+ class SymbolTable:
+        """Keeps a correspondence between symbolic labels and numeric addresses."""
+
+        def __init__(self):
+            """Creates a new empty symbol table"""
+            self.symbols = {}
+            self.add_pair("SP", 0x0000)
+            self.add_pair("LCL", 0x0001)
+            self.add_pair("ARG", 0x0002)
+            self.add_pair("THIS", 0x0003)
+            self.add_pair("THAT", 0x0004)
+            for i in range(16):
+                register = "R{num}".format(num=i)
+                self.add_pair(register, 0x0000 + i)
+            self.add_pair("SCREEN", 0x4000)
+            self.add_pair("KBD", 0x6000)
+            self.next_label = 0x0010
+
+        def add_pair(self, symbol, address):
+            """Adds the pair (symbol, address) to the table."""
+            self.symbols[symbol] = address
+
+        def contains(self, symbol):
+            """Does the symbol table contain the given symbol?"""
+            return symbol in self.symbols
+
+        def get_address(self, symbol):
+            """Returns the address associated with the symbol."""
+            return self.symbols[symbol]
+
 class Parser:
     """Encapsulates access to the input code. Reads an assembly language command, parses it,
     and provides convenient access to the command’s components (fields and symbols).
@@ -173,36 +203,6 @@ class Parser:
         if SEMI_COLON_REGEX in self.current_command:
             _, jump = re.split(SEMI_COLON_REGEX, self.current_command)
         return Code.jump(jump)
-
-    class SymbolTable:
-        """Keeps a correspondence between symbolic labels and numeric addresses."""
-
-        def __init__(self):
-            """Creates a new empty symbol table"""
-            self.symbols = {}
-            self.add_pair("SP", 0x0000)
-            self.add_pair("LCL", 0x0001)
-            self.add_pair("ARG", 0x0002)
-            self.add_pair("THIS", 0x0003)
-            self.add_pair("THAT", 0x0004)
-            for i in range(16):
-                register = "R{num}".format(num=i)
-                self.add_pair(register, 0x0000 + i)
-            self.add_pair("SCREEN", 0x4000)
-            self.add_pair("KBD", 0x6000)
-            self.next_label = 0x0010
-
-        def add_pair(self, symbol, address):
-            """Adds the pair (symbol, address) to the table."""
-            self.symbols[symbol] = address
-
-        def contains(self, symbol):
-            """Does the symbol table contain the given symbol?"""
-            return symbol in self.symbols
-
-        def get_address(self, symbol):
-            """Returns the address associated with the symbol."""
-            return self.symbols[symbol]
 
 def parse_assembly(parser):
     commands = []
