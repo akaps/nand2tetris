@@ -88,7 +88,7 @@ class Code:
         }
         return jumpcode[mnemonic]
 
- class SymbolTable:
+class SymbolTable:
         """Keeps a correspondence between symbolic labels and numeric addresses."""
 
         def __init__(self):
@@ -127,6 +127,10 @@ class Parser:
         """Open the file at file_name and prepare to parse it
         Generate a stream instance to use in other methods"""
         self.lines = self.remove_decorators(lines)
+        self.reset()
+        self.symbol_table = SymbolTable()
+
+    def reset(self):
         self.next_line = 0
         self.current_command = None
 
@@ -141,6 +145,41 @@ class Parser:
             if line:
                 res.append(line.strip())
         return res
+
+    def preprocess(self):
+        instruction = 0
+        while self.has_more_commands():
+            self.advance()
+            if self.command_type() == CommandType.LOAD:
+                self.symbol_table.add_pair(self.symbol(), instruction)
+            else:
+                instruction += 1
+        self.reset()
+        print(self.symbol_table.symbols)
+
+    def parse_assembly(self):
+        self.preprocess()
+        commands = []
+        next_var = 16
+        while self.has_more_commands():
+            self.advance()
+            cmd_type = self.command_type()
+            if cmd_type == CommandType.ADDRESS:
+                symbol = self.symbol()
+                if not symbol.isdigit():
+                    if self.symbol_table.contains(symbol):
+                        symbol = self.symbol_table.get_address(symbol)
+                    else:
+                        self.symbol_table.add_pair(symbol, next_var)
+                        symbol = next_var
+                        next_var += 1
+                next_command = "0{value:015b}".format(value=int(symbol))
+            if cmd_type == CommandType.COMPUTE:
+                next_command = "111{comp}{dest}{jump}".format(comp=self.comp(), dest=self.dest(), jump=self.jump())
+            if cmd_type != CommandType.LOAD:
+                #ignore loads
+                commands.append(next_command)
+        return commands
 
     def has_more_commands(self):
         """Returns true if the stream is not empty"""
@@ -204,20 +243,6 @@ class Parser:
             _, jump = re.split(SEMI_COLON_REGEX, self.current_command)
         return Code.jump(jump)
 
-def parse_assembly(parser):
-    commands = []
-    while parser.has_more_commands():
-        parser.advance()
-        cmd_type = parser.command_type()
-        if cmd_type == CommandType.ADDRESS:
-            next_command = "0{value:015b}".format(value=int(parser.symbol()))
-        if cmd_type == CommandType.COMPUTE:
-            next_command = "111{comp}{dest}{jump}".format(comp=parser.comp(), dest=parser.dest(), jump=parser.jump())
-        if cmd_type == CommandType.LOAD:
-            print("unexpected for no symbols!")
-        commands.append(next_command)
-    return commands
-
 def main():
     #initialize the assembler
     file_name = sys.argv[1]
@@ -227,7 +252,7 @@ def main():
     file.close()
 
     #perform the translation
-    result = parse_assembly(parser)
+    result = parser.parse_assembly()
 
     #output results to file
     name, ext = os.path.basename(file_name).split(".")
