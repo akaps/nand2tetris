@@ -11,31 +11,7 @@ SEGMENTS = {
     'temp' : 'TEMP'
 }
 
-ARITHMETIC = [
-    'add',
-    'sub',
-    'neg',
-    'eq',
-    'gt',
-    'lt',
-    'and',
-    'or',
-    'not'
-]
-
-#additional VM commands
-PUSH = 'push'
-POP = 'pop'
-
-VM_EXTENSION = '.vm'
-ASSEMBLY_EXTENSION = '.asm'
-STACK_START = 0x100
-HEAP_START = 0x800
-
-#commonly used delimeters
-COMMENT = '//'
-
-class CommandType(Enum):
+class CmdType(Enum):
     C_ARITHMETIC = 0 #form: add/sub/neg/eq/gt/lt/and/or/not
     C_PUSH = 1 #form: push segment index. push value of segment[index] to stack
     C_POP = 2 #form: pop segment index. pop topmost stack element and store in segment[index]
@@ -45,6 +21,34 @@ class CommandType(Enum):
     C_FUNCTION = 6 #form: functionName nLocals. includes number of variables
     C_RETURN = 7 #transfer control back to calling function
     C_CALL = 8 #form: call functionName nArgs
+
+COMMANDS = {
+    'add'       : CmdType.C_ARITHMETIC,
+    'sub'       : CmdType.C_ARITHMETIC,
+    'neg'       : CmdType.C_ARITHMETIC,
+    'eq'        : CmdType.C_ARITHMETIC,
+    'gt'        : CmdType.C_ARITHMETIC,
+    'lt'        : CmdType.C_ARITHMETIC,
+    'and'       : CmdType.C_ARITHMETIC,
+    'or'        : CmdType.C_ARITHMETIC,
+    'not'       : CmdType.C_ARITHMETIC,
+    'push'      : CmdType.C_PUSH,
+    'pop'       : CmdType.C_POP,
+    'label'     : CmdType.C_LABEL,
+    'goto'      : CmdType.C_GOTO,
+    'if-goto'   : CmdType.C_IF,
+    'function'  : CmdType.C_FUNCTION,
+    'call'      : CmdType.C_CALL,
+    'return'    : CmdType.C_RETURN
+}
+
+VM_EXTENSION = '.vm'
+ASSEMBLY_EXTENSION = '.asm'
+STACK_START = 0x100
+HEAP_START = 0x800
+
+#commonly used delimeters
+COMMENT = '//'
 
 class Parser:
     '''
@@ -88,14 +92,7 @@ class Parser:
         '''
         Returns a constant representing the type of the current command
         '''
-        if self.current_command in ARITHMETIC:
-            return CommandType.C_ARITHMETIC
-        cmd_type = {
-            PUSH : CommandType.C_PUSH,
-            POP : CommandType.C_POP
-            #Can add more command types here
-        }
-        return cmd_type[self.current_command]
+        return COMMANDS[self.current_command.split(' ')[0]]
 
     def arg1(self):
         '''
