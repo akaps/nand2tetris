@@ -58,12 +58,12 @@ class Parser:
         Prepares to parse the input vm lines
         '''
         file = open(file_name, 'r')
-        self.lines = self.remove_decorators(file.readlines())
+        self.lines = self.preprocess(file.readlines())
         file.close()
         self.next_command = 0
         self.current_command = None
 
-    def remove_decorators(self, lines):
+    def preprocess(self, lines):
         result = []
         for line in lines:
             line=line.strip()
@@ -71,7 +71,12 @@ class Parser:
                 comment_index= line.index(COMMENT)
                 line = line[:comment_index]
             if line:
-                result.append(line.strip().split())
+                line = line.strip().split()
+                for index, element in enumerate(line):
+                    if element.isdigit():
+                        line[index] = int(element)
+                result.append(line)
+
         return result
 
     def has_more_commands(self):
@@ -91,14 +96,14 @@ class Parser:
         '''
         Returns a constant representing the type of the current command
         '''
-        return COMMANDS[self.arg1()]
+        return COMMANDS[self.current_command[0]]
 
     def arg1(self):
         '''
         Returns the first argument of the current command. In the case of C_ARITHMETIC, the command (add, sub, ...) is returned instead
         Should not be called if the type is C_RETURN
         '''
-        if self.current_command.command_type() == CmdType.C_ARITHMETIC:
+        if self.command_type() == CmdType.C_ARITHMETIC:
             return self.current_command[0]
         return self.current_command[1]
 
