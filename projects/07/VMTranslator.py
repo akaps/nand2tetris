@@ -173,7 +173,7 @@ def main():
         for file_name in path.iterdir():
             if file_name.suffix == VM_EXTENSION:
                 files.append(file_name)
-        write_name = get_write_path(path.parent, path.name)
+        write_name = get_write_path(path, path.name)
 
     print('translating {files}->{output}'.format(
         files=files,
