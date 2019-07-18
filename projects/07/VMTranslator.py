@@ -95,10 +95,12 @@ class Parser:
 
     def arg1(self):
         '''
-        Returns the first argument of the current command. In the case of C_ARITHMETIC, the command (add, sub, ...) is returned
+        Returns the first argument of the current command. In the case of C_ARITHMETIC, the command (add, sub, ...) is returned instead
         Should not be called if the type is C_RETURN
         '''
-        return self.current_command[0]
+        if self.current_command.command_type() == CmdType.C_ARITHMETIC:
+            return self.current_command[0]
+        return self.current_command[1]
 
     def arg2(self):
         '''
@@ -108,7 +110,7 @@ class Parser:
             C_FUNCTION
             C_CALL
         '''
-        return int(self.current_command[1])
+        return int(self.current_command[2])
 
 class CodeWriter:
     '''
