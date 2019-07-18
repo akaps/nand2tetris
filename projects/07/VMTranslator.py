@@ -72,7 +72,7 @@ class Parser:
                 comment_index= line.index(COMMENT)
                 line = line[:comment_index]
             if line:
-                result.append(line.strip())
+                result.append(line.strip().split())
         return result
 
     def has_more_commands(self):
@@ -92,14 +92,14 @@ class Parser:
         '''
         Returns a constant representing the type of the current command
         '''
-        return COMMANDS[self.current_command.split(' ')[0]]
+        return COMMANDS[self.arg1]
 
     def arg1(self):
         '''
         Returns the first argument of the current command. In the case of C_ARITHMETIC, the command (add, sub, ...) is returned
         Should not be called if the type is C_RETURN
         '''
-        return self.current_command.split(' ')[0]
+        return self.current_command[0]
 
     def arg2(self):
         '''
@@ -109,7 +109,7 @@ class Parser:
             C_FUNCTION
             C_CALL
         '''
-        return int(self.current_command.split(' ')[1])
+        return int(self.current_command[1])
 
 class CodeWriter:
     '''
