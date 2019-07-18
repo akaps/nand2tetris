@@ -2,14 +2,12 @@ import sys
 from pathlib import Path
 from enum import Enum
 
-SEGMENTS = {
-    'local' : 'LCL',
-    'argument' : 'ARG',
-    'this' : 'THIS',
-    'that' : 'THAT',
-    'pointer' : 'THIS',
-    'temp' : 'TEMP'
-}
+VM_EXTENSION = '.vm'
+ASSEMBLY_EXTENSION = '.asm'
+
+#commonly used delimeters
+COMMENT = '//'
+NEWLINE = '\n'
 
 class CmdType(Enum):
     C_ARITHMETIC = 0 #form: add/sub/neg/eq/gt/lt/and/or/not
@@ -42,13 +40,14 @@ COMMANDS = {
     'return'    : CmdType.C_RETURN
 }
 
-VM_EXTENSION = '.vm'
-ASSEMBLY_EXTENSION = '.asm'
-STACK_START = 0x100
-HEAP_START = 0x800
-
-#commonly used delimeters
-COMMENT = '//'
+SEGMENTS = {
+    'local' : 'LCL',
+    'argument' : 'ARG',
+    'this' : 'THIS',
+    'that' : 'THAT',
+    'pointer' : 'THIS',
+    'temp' : 'TEMP'
+}
 
 class Parser:
     '''
@@ -92,7 +91,7 @@ class Parser:
         '''
         Returns a constant representing the type of the current command
         '''
-        return COMMANDS[self.arg1]
+        return COMMANDS[self.arg1()]
 
     def arg1(self):
         '''
