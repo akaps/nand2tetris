@@ -20,24 +20,42 @@ class CmdType(Enum):
     C_RETURN = 7 #transfer control back to calling function
     C_CALL = 8 #form: call functionName nArgs
 
-COMMANDS = {
-    'add'       : CmdType.C_ARITHMETIC,
-    'sub'       : CmdType.C_ARITHMETIC,
-    'neg'       : CmdType.C_ARITHMETIC,
-    'eq'        : CmdType.C_ARITHMETIC,
-    'gt'        : CmdType.C_ARITHMETIC,
-    'lt'        : CmdType.C_ARITHMETIC,
-    'and'       : CmdType.C_ARITHMETIC,
-    'or'        : CmdType.C_ARITHMETIC,
-    'not'       : CmdType.C_ARITHMETIC,
-    'push'      : CmdType.C_PUSH,
-    'pop'       : CmdType.C_POP,
-    'label'     : CmdType.C_LABEL,
-    'goto'      : CmdType.C_GOTO,
-    'if-goto'   : CmdType.C_IF,
-    'function'  : CmdType.C_FUNCTION,
-    'call'      : CmdType.C_CALL,
-    'return'    : CmdType.C_RETURN
+ADD         = 'add'
+SUB         = 'sub'
+NEG         = 'neg'
+EQ          = 'eq'
+GT          = 'gt'
+LT          = 'lt'
+AND         = 'and'
+OR          = 'or'
+NOT         = 'not'
+PUSH        = 'push'
+POP         = 'pop'
+LABEL       = 'label'
+GOTO        = 'goto'
+IF          = 'if-goto'
+FUNCTION    = 'function'
+CALL        = 'call'
+RETURN      = 'return'
+
+COMMAND_TYPES = {
+    ADD         : CmdType.C_ARITHMETIC,
+    SUB         : CmdType.C_ARITHMETIC,
+    NEG         : CmdType.C_ARITHMETIC,
+    EQ          : CmdType.C_ARITHMETIC,
+    GT          : CmdType.C_ARITHMETIC,
+    LT          : CmdType.C_ARITHMETIC,
+    AND         : CmdType.C_ARITHMETIC,
+    OR          : CmdType.C_ARITHMETIC,
+    NOT         : CmdType.C_ARITHMETIC,
+    PUSH        : CmdType.C_PUSH,
+    POP         : CmdType.C_POP,
+    LABEL       : CmdType.C_LABEL,
+    GOTO        : CmdType.C_GOTO,
+    IF          : CmdType.C_IF,
+    FUNCTION    : CmdType.C_FUNCTION,
+    CALL        : CmdType.C_CALL,
+    RETURN      : CmdType.C_RETURN
 }
 
 SEGMENTS = {
@@ -96,7 +114,7 @@ class Parser:
         '''
         Returns a constant representing the type of the current command
         '''
-        return COMMANDS[self.current_command[0]]
+        return COMMAND_TYPES[self.current_command[0]]
 
     def arg1(self):
         '''
@@ -127,17 +145,70 @@ class CodeWriter:
         '''
         self.file = open(out_file_name, 'w')
 
+    def write_decrement_sp(self):
+        self.write_line('@SP')
+        self.write_line('M=M-1')
+
     def write_arithmetic(self, command):
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
         '''
-        pass
+        self.write_line('@SP')
+        self.write_line('D=M')
+        if command == ADD:
+            self.write_decrement_sp()
+            self.write_line('M=D+M')
+        elif command == SUB:
+            self.write_decrement_sp()
+            self.write_line('M=D-M')
+        elif command == NEG:
+            self.write_line('M=-D')
+        elif command == EQ:
+            self.write_decrement_sp()
+            #TODO need to use jumps, yay
+            self.write_line('unfinished EQ')
+        elif command == GT:
+            self.write_decrement_sp()
+            #TODO need to use jumps, yay
+            self.write_line('unfinished GT')
+        elif command == LT:
+            self.write_decrement_sp()
+            #TODO need to use jumps, yay
+            self.write_line('unfinished LT')
+        elif command == AND:
+            self.write_decrement_sp()
+            self.write_line('M=D&M')
+        elif command == OR:
+            self.write_decrement_sp()
+            self.write_line('M=D|M')
+        elif command == NOT:
+            self.write_line('M=!D')
 
     def write_push_pop(self, cmd_type, segment, index):
         '''
         Writes to the output file the assembly code that implements the given push/pop command
         '''
-        pass
+        if cmd_type == CmdType.C_PUSH:
+            if segment == 'constant':
+                self.write_line('@{index}'.format(index=index))
+                self.write_line('D=A')
+                self.write_line('@SP')
+                self.write_line('M=D')
+            else:
+                #TODO part 8
+                pass
+            self.write_line('@SP')
+            self.write_line('M=M+1')
+        if cmd_type == CmdType.C_POP:
+            self.write_line('@SP')
+            self.write_line('D=M')
+            self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
+            self.write_line('M=D'.format(seg=SEGMENTS[segment]))
+            self.write_decrement_sp()
+
+    def write_line(self, line):
+        self.file.write(line)
+        self.file.write(NEWLINE)
 
     def close(self):
         '''
@@ -148,8 +219,10 @@ class CodeWriter:
 def translate(parser, writer):
     while parser.has_more_commands():
         parser.advance()
-        print(parser.current_command)
-        print('^{arg1}'.format(arg1=parser.arg1()))
+        if parser.command_type() == CmdType.C_ARITHMETIC:
+            writer.write_arithmetic(parser.arg1())
+        if parser.command_type() == CmdType.C_POP or parser.command_type() == CmdType.C_PUSH:
+            writer.write_push_pop(parser.command_type(), parser.arg1(), parser.arg2())
 
 def translate_files(files, write_name):
     writer = CodeWriter(write_name)
@@ -157,7 +230,6 @@ def translate_files(files, write_name):
         print('parsing {file}'.format(file=file_name))
         parser = Parser(file_name)
         translate(parser, writer)
-
     writer.close()
 
 def get_write_path(dir, name):
@@ -177,13 +249,11 @@ def main():
             if file_name.suffix == VM_EXTENSION:
                 files.append(file_name)
         write_name = get_write_path(path, path.name)
-
-    print('translating {files}->{output}'.format(
+    translate_files(files, write_name)
+    print('translated {files}->{output}'.format(
         files=files,
         output=write_name
     ))
-
-    translate_files(files, write_name)
 
 if __name__ == '__main__':
     main()
