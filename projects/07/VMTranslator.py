@@ -58,13 +58,21 @@ COMMAND_TYPES = {
     RETURN      : CmdType.C_RETURN
 }
 
+CONSTANT    = 'constant'
+LOCAL       = 'local'
+ARGUMENT    = 'argument'
+THIS        = 'this'
+THAT        = 'that'
+POINTER     = 'pointer'
+TEMP        = 'temp'
+
 SEGMENTS = {
-    'local' : 'LCL',
-    'argument' : 'ARG',
-    'this' : 'THIS',
-    'that' : 'THAT',
-    'pointer' : 'THIS',
-    'temp' : 'TEMP'
+    LOCAL     : 'LCL',
+    ARGUMENT  : 'ARG',
+    THIS      : 'THIS',
+    THAT      : 'THAT',
+    POINTER   : 'THIS',
+    TEMP      : 'TEMP'
 }
 
 class Parser:
