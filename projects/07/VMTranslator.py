@@ -168,7 +168,7 @@ class CodeWriter:
             self.write_line('@SP')
             self.write_line('M=M-1')
             self.write_line('A=M')
-            self.write_line('M=D-M')
+            self.write_line('M=M-D')
             self.write_line('@SP')
             self.write_line('M=M+1')
         elif command == NEG:
@@ -235,13 +235,12 @@ class CodeWriter:
             self.write_line('M=M+1')
         if cmd_type == CmdType.C_POP:
             self.write_line('@SP')
+            self.write_line('M=M-1')
             self.write_line('A=M')
             self.write_line('D=M')
             self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
             self.write_line('A=M')
             self.write_line('M=D'.format(seg=SEGMENTS[segment]))
-            self.write_line('@SP')
-            self.write_line('M=M-1')
 
     def write_line(self, line):
         self.file.write(line)
