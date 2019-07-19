@@ -149,12 +149,17 @@ class CodeWriter:
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
         '''
-        self.write_line('@SP')
-        self.write_line('A=M')
-        self.write_line('D=M')
         if command == ADD:
-            self.write_decrement_sp()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
             self.write_line('M=D+M')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == SUB:
             self.write_decrement_sp()
             self.write_line('M=D-M')
@@ -181,10 +186,6 @@ class CodeWriter:
         elif command == NOT:
             self.write_line('M=!D')
 
-    def write_decrement_sp(self):
-        self.write_line('@SP')
-        self.write_line('M=M-1')
-
     def write_push_pop(self, cmd_type, segment, index):
         '''
         Writes to the output file the assembly code that implements the given push/pop command
@@ -208,7 +209,8 @@ class CodeWriter:
             self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
             self.write_line('A=M')
             self.write_line('M=D'.format(seg=SEGMENTS[segment]))
-            self.write_decrement_sp()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
 
     def write_line(self, line):
         self.file.write(line)
