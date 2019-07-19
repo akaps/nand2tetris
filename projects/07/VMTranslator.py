@@ -161,8 +161,16 @@ class CodeWriter:
             self.write_line('@SP')
             self.write_line('M=M+1')
         elif command == SUB:
-            self.write_decrement_sp()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
             self.write_line('M=D-M')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == NEG:
             self.write_line('M=-D')
         elif command == EQ:
@@ -178,11 +186,27 @@ class CodeWriter:
             #TODO need to use jumps, yay
             self.write_line('unfinished LT')
         elif command == AND:
-            self.write_decrement_sp()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
             self.write_line('M=D&M')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == OR:
-            self.write_decrement_sp()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
             self.write_line('M=D|M')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == NOT:
             self.write_line('M=!D')
 
