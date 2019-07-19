@@ -145,6 +145,16 @@ class CodeWriter:
         '''
         self.file = open(out_file_name, 'w')
 
+    def set_file_name(self, file_name):
+        path = Path(file_name)
+        self.file_name, _ = path.name.split('.')
+        self.var_count = 0
+
+    def generate_label(self):
+        result = '{file}.{var_count}'.format(file=self.file_name, var_count=self.var_count)
+        self.var_count += 1
+        return result
+
     def write_arithmetic(self, command):
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
@@ -179,14 +189,83 @@ class CodeWriter:
             self.write_line('@SP')
             self.write_line('M=M+1')
         elif command == EQ:
-            #TODO need to use jumps, yay
-            self.write_line('unfinished EQ')
+            EQ_TRUE = self.generate_label()
+            EQ_DONE = self.generate_label()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M-D')
+            self.write_line('@{label}'.format(label=EQ_TRUE))
+            self.write_line('D;JEQ')
+            self.write_line('@0')
+            self.write_line('D=A')
+            self.write_line('@{label}'.format(label=EQ_DONE))
+            self.write_line('0;JMP')
+            self.write_line('({label})'.format(label=EQ_TRUE))
+            self.write_line('@0')
+            self.write_line('D=A-1')
+            self.write_line('({label})'.format(label=EQ_DONE))
+            self.write_line('@SP')
+            self.write_line('A=M')
+            self.write_line('M=D')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == GT:
-            #TODO need to use jumps, yay
-            self.write_line('unfinished GT')
+            GT_TRUE = self.generate_label()
+            GT_DONE = self.generate_label()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M-D')
+            self.write_line('@{label}'.format(label=GT_TRUE))
+            self.write_line('D;JGT')
+            self.write_line('@0')
+            self.write_line('D=A')
+            self.write_line('@{label}'.format(label=GT_DONE))
+            self.write_line('0;JMP')
+            self.write_line('({label})'.format(label=GT_TRUE))
+            self.write_line('@0')
+            self.write_line('D=A-1')
+            self.write_line('({label})'.format(label=GT_DONE))
+            self.write_line('@SP')
+            self.write_line('A=M')
+            self.write_line('M=D')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == LT:
-            #TODO need to use jumps, yay
-            self.write_line('unfinished LT')
+            LT_TRUE = self.generate_label()
+            LT_DONE = self.generate_label()
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('M=M-1')
+            self.write_line('A=M')
+            self.write_line('D=M-D')
+            self.write_line('@{label}'.format(label=LT_TRUE))
+            self.write_line('D;JLT')
+            self.write_line('@0')
+            self.write_line('D=A')
+            self.write_line('@{label}'.format(label=LT_DONE))
+            self.write_line('0;JMP')
+            self.write_line('({label})'.format(label=LT_TRUE))
+            self.write_line('@0')
+            self.write_line('D=A-1')
+            self.write_line('({label})'.format(label=LT_DONE))
+            self.write_line('@SP')
+            self.write_line('A=M')
+            self.write_line('M=D')
+            self.write_line('@SP')
+            self.write_line('M=M+1')
         elif command == AND:
             self.write_line('@SP')
             self.write_line('M=M-1')
@@ -265,6 +344,7 @@ def translate_files(files, write_name):
     for file_name in files:
         print('parsing {file}'.format(file=file_name))
         parser = Parser(file_name)
+        writer.set_file_name(file_name)
         translate(parser, writer)
     writer.close()
 
