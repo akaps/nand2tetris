@@ -168,63 +168,63 @@ class CodeWriter:
         Writes to the output file the assembly code that implements the given arithmetic command
         '''
         if command == ADD:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('D=M')
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('M=D+M')
-            self.write_push_internal()
+            self.increment_sp()
         elif command == SUB:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('D=M')
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('M=M-D')
-            self.write_push_internal()
+            self.increment_sp()
         elif command == NEG:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('M=-M')
-            self.write_push_internal()
+            self.increment_sp()
         elif command == EQ:
             EQ_TRUE = self.generate_label()
             EQ_DONE = self.generate_label()
             self.write_load_comparison(EQ_TRUE)
             self.write_line('D;JEQ')
             self.write_push_true_false(EQ_DONE, EQ_TRUE)
-            self.write_push_internal()
+            self.increment_sp()
         elif command == GT:
             GT_TRUE = self.generate_label()
             GT_DONE = self.generate_label()
             self.write_load_comparison(GT_TRUE)
             self.write_line('D;JGT')
             self.write_push_true_false(GT_DONE, GT_TRUE)
-            self.write_push_internal()
+            self.increment_sp()
         elif command == LT:
             LT_TRUE = self.generate_label()
             LT_DONE = self.generate_label()
             self.write_load_comparison(LT_TRUE)
             self.write_line('D;JLT')
             self.write_push_true_false(LT_DONE, LT_TRUE)
-            self.write_push_internal()
+            self.increment_sp()
         elif command == AND:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('D=M')
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('M=D&M')
-            self.write_push_internal()
+            self.increment_sp()
         elif command == OR:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('D=M')
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('M=D|M')
-            self.write_push_internal()
+            self.increment_sp()
         elif command == NOT:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('M=!M')
-            self.write_push_internal()
+            self.increment_sp()
 
     def write_load_comparison(self, CASE_TRUE):
-        self.write_pop_internal()
+        self.decrement_sp()
         self.write_line('D=M')
-        self.write_pop_internal()
+        self.decrement_sp()
         self.write_line('D=M-D')
         self.write_line('@{label}'.format(label=CASE_TRUE))
 
@@ -241,12 +241,12 @@ class CodeWriter:
         self.write_line('A=M')
         self.write_line('M=D')
 
-    def write_push_internal(self):
+    def increment_sp(self):
         '''Update the stack pointer assuming a push occurred'''
         self.write_line('@SP')
         self.write_line('M=M+1')
 
-    def write_pop_internal(self):
+    def decrement_sp(self):
         '''Update the stack pointer assuming a pop occurred. M contains the popped value'''
         self.write_line('@SP')
         self.write_line('M=M-1')
@@ -266,13 +266,14 @@ class CodeWriter:
             else:
                 #TODO part 8
                 pass
-            self.write_push_internal()
+            self.increment_sp()
         if cmd_type == CmdType.C_POP:
-            self.write_pop_internal()
+            self.decrement_sp()
             self.write_line('D=M')
             self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
             self.write_line('A=M')
             self.write_line('M=D')
+            self.increment_sp()
 
     def write_line(self, line):
         self.file.write(line)
