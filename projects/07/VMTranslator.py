@@ -229,34 +229,35 @@ class CodeWriter:
         Writes to the output file the assembly code that implements the given push/pop command
         '''
         if cmd_type == CmdType.C_PUSH:
-            if segment == CONSTANT:
-                self.write_line('@{index}'.format(index=index))
-                self.write_line('D=A')
-                self.write_line('@SP')
-                self.write_line('A=M')
-                self.write_line('M=D')
-            elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
-                self.write_line('//PUSH {seg} {index}'.format(seg=segment, index=index))
-                self.offset_segment(segment, index)
-                self.write_line('@SP')
-                self.write_line('A=M')
-                self.write_line('M=D')
-                self.write_line('//END PUSH SEGMENT')
-            else:
-                pass
-                #pointer, temp, and static
-            self.write_increment_sp()
+            self.write_push(segment, index)
         if cmd_type == CmdType.C_POP:
+            self.write_pop(segment, index)
+
+    def write_push(self, segment, index):
+        if segment == CONSTANT:
+            self.write_line('@{index}'.format(index=index))
+            self.write_line('D=A')
+        elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
             self.offset_segment(segment, index)
-            self.write_line('@SP')
-            self.write_line('A=M')
-            self.write_line('M=D')
-            self.write_decrement_sp()
-            self.write_line('D=M')
-            self.write_line('@SP')
-            self.write_line('A=M+1')
-            self.write_line('A=M')
-            self.write_line('M=D')
+        else:
+            pass
+            #pointer, temp, and static
+        self.write_line('@SP')
+        self.write_line('A=M')
+        self.write_line('M=D')
+        self.write_increment_sp()
+
+    def write_pop(self, segment, index):
+        self.offset_segment(segment, index)
+        self.write_line('@SP')
+        self.write_line('A=M')
+        self.write_line('M=D')
+        self.write_decrement_sp()
+        self.write_line('D=M')
+        self.write_line('@SP')
+        self.write_line('A=M+1')
+        self.write_line('A=M')
+        self.write_line('M=D')
 
     def offset_segment(self, segment, index):
         self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
