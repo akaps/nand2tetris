@@ -167,59 +167,32 @@ class CodeWriter:
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
         '''
-        if command == ADD:
+        OP_LINE = {
+            ADD : 'M=D+M',
+            SUB : 'M=M-D',
+            NEG : 'M=-M',
+            AND : 'M=D&M',
+            OR  : 'M=D|M',
+            NOT : 'M=!M',
+            EQ  : 'D;JEQ',
+            GT  : 'D;JGT',
+            LT  : 'D;JLT'
+        }
+        if command in [ADD, SUB, NEG, AND, OR, NOT]:
             self.decrement_sp()
-            self.write_line('D=M')
-            self.decrement_sp()
-            self.write_line('M=D+M')
-            self.increment_sp()
-        elif command == SUB:
-            self.decrement_sp()
-            self.write_line('D=M')
-            self.decrement_sp()
-            self.write_line('M=M-D')
-            self.increment_sp()
-        elif command == NEG:
-            self.decrement_sp()
-            self.write_line('M=-M')
-            self.increment_sp()
-        elif command == EQ:
-            EQ_TRUE = self.generate_label()
-            EQ_DONE = self.generate_label()
-            self.write_load_comparison(EQ_TRUE)
-            self.write_line('D;JEQ')
-            self.write_push_true_false(EQ_DONE, EQ_TRUE)
-            self.increment_sp()
-        elif command == GT:
-            GT_TRUE = self.generate_label()
-            GT_DONE = self.generate_label()
-            self.write_load_comparison(GT_TRUE)
-            self.write_line('D;JGT')
-            self.write_push_true_false(GT_DONE, GT_TRUE)
-            self.increment_sp()
-        elif command == LT:
-            LT_TRUE = self.generate_label()
-            LT_DONE = self.generate_label()
-            self.write_load_comparison(LT_TRUE)
-            self.write_line('D;JLT')
-            self.write_push_true_false(LT_DONE, LT_TRUE)
-            self.increment_sp()
-        elif command == AND:
-            self.decrement_sp()
-            self.write_line('D=M')
-            self.decrement_sp()
-            self.write_line('M=D&M')
-            self.increment_sp()
-        elif command == OR:
-            self.decrement_sp()
-            self.write_line('D=M')
-            self.decrement_sp()
-            self.write_line('M=D|M')
-            self.increment_sp()
-        elif command == NOT:
-            self.decrement_sp()
-            self.write_line('M=!M')
-            self.increment_sp()
+            if command in [NEG, NOT]:
+                self.write_line(OP_LINE[command])
+            else:
+                self.write_line('D=M')
+                self.decrement_sp()
+                self.write_line(OP_LINE[command])
+        elif command in [EQ, GT, LT]:
+            COMP_TRUE = self.generate_label()
+            COMP_DONE = self.generate_label()
+            self.write_load_comparison(COMP_TRUE)
+            self.write_line(OP_LINE[command])
+            self.write_push_true_false(COMP_DONE, COMP_TRUE)
+        self.increment_sp()
 
     def write_load_comparison(self, CASE_TRUE):
         self.decrement_sp()
