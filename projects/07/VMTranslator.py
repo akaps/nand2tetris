@@ -179,12 +179,12 @@ class CodeWriter:
             LT  : 'D;JLT'
         }
         if command in [ADD, SUB, NEG, AND, OR, NOT]:
-            self.decrement_sp()
+            self.write_decrement_sp()
             if command in [NEG, NOT]:
                 self.write_line(OP_LINE[command])
             else:
                 self.write_line('D=M')
-                self.decrement_sp()
+                self.write_decrement_sp()
                 self.write_line(OP_LINE[command])
         elif command in [EQ, GT, LT]:
             COMP_TRUE = self.generate_label()
@@ -192,12 +192,12 @@ class CodeWriter:
             self.write_load_comparison(COMP_TRUE)
             self.write_line(OP_LINE[command])
             self.write_push_true_false(COMP_DONE, COMP_TRUE)
-        self.increment_sp()
+        self.write_increment_sp()
 
     def write_load_comparison(self, CASE_TRUE):
-        self.decrement_sp()
+        self.write_decrement_sp()
         self.write_line('D=M')
-        self.decrement_sp()
+        self.write_decrement_sp()
         self.write_line('D=M-D')
         self.write_line('@{label}'.format(label=CASE_TRUE))
 
@@ -214,12 +214,12 @@ class CodeWriter:
         self.write_line('A=M')
         self.write_line('M=D')
 
-    def increment_sp(self):
+    def write_increment_sp(self):
         '''Update the stack pointer assuming a push occurred'''
         self.write_line('@SP')
         self.write_line('M=M+1')
 
-    def decrement_sp(self):
+    def write_decrement_sp(self):
         '''Update the stack pointer assuming a pop occurred. M contains the popped value'''
         self.write_line('@SP')
         self.write_line('AM=M-1')
@@ -245,13 +245,13 @@ class CodeWriter:
             else:
                 pass
                 #pointer, temp, and static
-            self.increment_sp()
+            self.write_increment_sp()
         if cmd_type == CmdType.C_POP:
             self.offset_segment(segment, index)
             self.write_line('@SP')
             self.write_line('A=M')
             self.write_line('M=D')
-            self.decrement_sp()
+            self.write_decrement_sp()
             self.write_line('D=M')
             self.write_line('@SP')
             self.write_line('A=M+1')
