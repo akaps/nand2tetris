@@ -71,8 +71,8 @@ SEGMENTS = {
     ARGUMENT  : 'ARG',
     THIS      : 'THIS',
     THAT      : 'THAT',
-    POINTER   : 'THIS',
-    TEMP      : 'TEMP'
+    POINTER   : 3,
+    TEMP      : 5
 }
 
 class Parser:
@@ -249,8 +249,7 @@ class CodeWriter:
     def decrement_sp(self):
         '''Update the stack pointer assuming a pop occurred. M contains the popped value'''
         self.write_line('@SP')
-        self.write_line('M=M-1')
-        self.write_line('A=M')
+        self.write_line('AM=M-1')
 
     def write_push_pop(self, cmd_type, segment, index):
         '''
@@ -263,17 +262,34 @@ class CodeWriter:
                 self.write_line('@SP')
                 self.write_line('A=M')
                 self.write_line('M=D')
+            elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
+                self.write_line('//PUSH {seg} {index}'.format(seg=segment, index=index))
+                self.offset_segment(segment, index)
+                self.write_line('@SP')
+                self.write_line('A=M')
+                self.write_line('M=D')
+                self.write_line('//END PUSH SEGMENT')
             else:
-                #TODO part 8
                 pass
+                #pointer, temp, and static
             self.increment_sp()
         if cmd_type == CmdType.C_POP:
-            self.decrement_sp()
-            self.write_line('D=M')
-            self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
+            self.offset_segment(segment, index)
+            self.write_line('@SP')
             self.write_line('A=M')
             self.write_line('M=D')
-            self.increment_sp()
+            self.decrement_sp()
+            self.write_line('D=M')
+            self.write_line('@SP')
+            self.write_line('A=M+1')
+            self.write_line('A=M')
+            self.write_line('M=D')
+
+    def offset_segment(self, segment, index):
+        self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
+        self.write_line('D=M')
+        self.write_line('@{index}'.format(index=index))
+        self.write_line('D=D+A')
 
     def write_line(self, line):
         self.file.write(line)
