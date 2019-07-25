@@ -257,7 +257,7 @@ class CodeWriter:
         Writes to the output file the assembly code that implements the given push/pop command
         '''
         if cmd_type == CmdType.C_PUSH:
-            if segment == 'constant':
+            if segment == CONSTANT:
                 self.write_line('@{index}'.format(index=index))
                 self.write_line('D=A')
                 self.write_line('@SP')
