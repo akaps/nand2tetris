@@ -152,15 +152,20 @@ class CodeWriter:
         Prepares the output file to write into
         '''
         self.file = open(out_file_name, 'w')
+        self.labels = []
 
     def set_file_name(self, file_name):
         path = Path(file_name)
         self.file_name, _ = path.name.split('.')
-        self.var_count = 0
 
-    def generate_label(self):
-        result = '{file}.{var_count}'.format(file=self.file_name, var_count=self.var_count)
-        self.var_count += 1
+    def generate_label(self, id):
+        result = '{file}.{id}'.format(file=self.file_name, id=id)
+        if type(id) is not int:
+            i = 1
+            while result in self.labels:
+                result = '{file}.{id}.{num}'.format(file=self.file_name, id=id, num=i)
+                i += 1
+            self.labels.append(result)
         return result
 
     def write_arithmetic(self, command):
@@ -187,8 +192,8 @@ class CodeWriter:
                 self.write_decrement_sp()
                 self.write_line(OP_LINE[command])
         elif command in [EQ, GT, LT]:
-            COMP_TRUE = self.generate_label()
-            COMP_DONE = self.generate_label()
+            COMP_TRUE = self.generate_label('{cmd}_TRUE'.format(cmd=command))
+            COMP_DONE = self.generate_label('{cmd}_DONE'.format(cmd=command))
             self.write_load_comparison(COMP_TRUE)
             self.write_line(OP_LINE[command])
             self.write_push_true_false(COMP_DONE, COMP_TRUE)
@@ -246,18 +251,25 @@ class CodeWriter:
             self.write_line('A=D')
             self.write_line('D=M')
         else:
-            pass
             #static
+            static_label=self.generate_label(index)
+            self.write_line('@{label}'.format(label=static_label))
+            self.write_line('D=M')
         self.write_line('@SP')
         self.write_line('A=M')
         self.write_line('M=D')
         self.write_increment_sp()
 
     def write_pop(self, segment, index):
-        if segment in [POINTER, TEMP]:
+        if segment in [LOCAL, ARGUMENT, THIS, THAT]:
+            self.offset_segment(segment, index)
+        elif segment in [POINTER, TEMP]:
             self.offset_literal(segment, index)
         else:
-            self.offset_segment(segment, index)
+            #static
+            static_label = self.generate_label(index)
+            self.write_line('@{label}'.format(label=static_label))
+            self.write_line('D=A')
         self.write_line('@SP')
         self.write_line('A=M')
         self.write_line('M=D')
