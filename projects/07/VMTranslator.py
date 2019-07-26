@@ -239,16 +239,25 @@ class CodeWriter:
             self.write_line('D=A')
         elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
             self.offset_segment(segment, index)
+            self.write_line('A=D')
+            self.write_line('D=M')
+        elif segment in [POINTER, TEMP]:
+            self.offset_literal(segment, index)
+            self.write_line('A=D')
+            self.write_line('D=M')
         else:
             pass
-            #pointer, temp, and static
+            #static
         self.write_line('@SP')
         self.write_line('A=M')
         self.write_line('M=D')
         self.write_increment_sp()
 
     def write_pop(self, segment, index):
-        self.offset_segment(segment, index)
+        if segment in [POINTER, TEMP]:
+            self.offset_literal(segment, index)
+        else:
+            self.offset_segment(segment, index)
         self.write_line('@SP')
         self.write_line('A=M')
         self.write_line('M=D')
@@ -258,6 +267,12 @@ class CodeWriter:
         self.write_line('A=M+1')
         self.write_line('A=M')
         self.write_line('M=D')
+
+    def offset_literal(self, segment, index):
+        self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
+        self.write_line('D=A')
+        self.write_line('@{index}'.format(index=index))
+        self.write_line('D=D+A')
 
     def offset_segment(self, segment, index):
         self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
