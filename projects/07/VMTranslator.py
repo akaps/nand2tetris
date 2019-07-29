@@ -1,9 +1,11 @@
 import sys
+import argparse
 from enum import Enum
 from pathlib import Path
 
 COMMENT  = '//'
 NEWLINE = '\n'
+VM = '.vm'
 
 ADD = 'add'
 SUB = 'sub'
@@ -429,16 +431,55 @@ def translate(parser, writer):
         else:
             assert False, 'Unsupported line {cmd}'.format(cmd=parser.current_line)
 
-def main():
-    path = Path(sys.argv[1])
-    parser = Parser(path)
-    out_file_name = '{stem}.asm'.format(stem=path.stem)
-    writer = CodeWriter(path.parent.joinpath(out_file_name))
+def parse_args(args):
+    usage = 'Translates given Hack .vm files for file/directory into .asm file'
+    parser = argparse.ArgumentParser(usage=usage)
 
-    writer.set_file_name(path.stem)
-    translate(parser, writer)
+    #positional arguments
+    parser.add_argument('path',
+        nargs=1,
+        help='the path of the file(s) to translate')
 
+    #optional arguments
+    parser.add_argument('-n', '--no_bootstrap',
+        dest='bootstrap',
+        default=True,
+        action='store_false',
+        help='translate without bootstrap instructions')
+    return parser.parse_args(args)
+
+def get_write_path(parent, name):
+    return parent.joinpath('{name}.asm'.format(name=name))
+
+def translate_files(files, write_name, bootstrap):
+    writer = CodeWriter(write_name)
+    if bootstrap:
+        assert False, 'boottstrap code not implemented'
+    for file_name in files:
+        print('Parsing {file}'.format(file=file_name))
+        parser=Parser(file_name)
+        writer.set_file_name(file_name.stem)
+        translate(parser, writer)
     writer.close()
 
+def main(argv):
+    args = parse_args(argv)
+    path = Path(args.path[0])
+
+    files = []
+    write_name = None
+
+    if path.is_file():
+        files.append(path)
+        write_name = get_write_path(path.parent, path.stem)
+    else:
+        for file_name in path.iterdir():
+            if file_name.suffix == VM:
+                files.append(file_name)
+        write_name = get_write_path(path, path.name)
+
+    translate_files(files, write_name, args.bootstrap)
+    print('Successfully translated {files} to {output}'.format(files=files, output=write_name))
+
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
