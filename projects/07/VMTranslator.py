@@ -15,8 +15,22 @@ AND = 'and'
 OR = 'or'
 NOT = 'not'
 PUSH = 'push'
+POP = 'pop'
 
 CONSTANT = 'constant'
+LOCAL = 'local'
+ARGUMENT = 'argument'
+THIS = 'this'
+THAT = 'that'
+TEMP = 'temp'
+
+SEGMENTS = {
+    LOCAL :     '@LCL',
+    ARGUMENT :  '@ARG',
+    THIS :      '@THIS',
+    THAT :      '@THAT',
+    TEMP :      '@5'
+}
 
 class CommandType(Enum):
     ARITHMETIC = 0
@@ -76,6 +90,10 @@ class Parser:
             return CommandType.ARITHMETIC
         elif command == PUSH:
             return CommandType.PUSH
+        elif command == POP:
+            return CommandType.POP
+        else:
+            assert False, 'Unsupported type for command {cmd}'.format(cmd=self.current_line[0])
 
     def arg1(self):
         '''
@@ -122,9 +140,9 @@ class CodeWriter:
 
     def generate_unique_label(self, comp):
         '''
-        returns a label in the form comp####
+        returns a label in the form comp$####
         '''
-        result = '{comp}{num}'.format(comp=comp, num=self.unique_id)
+        result = '{comp}${num}'.format(comp=comp, num=self.unique_id)
         self.unique_id += 1
         return result
 
@@ -172,6 +190,8 @@ class CodeWriter:
             self.write_line('D=A-1')
             self.write_line('({done})'.format(done=DONE))
             self.push_D_register()
+        else:
+            assert False, 'unsupported arithmetic expression {expr}'.format(expr=command)
 
     def write_push_pop(self, cmd_type, segment, index):
         '''
@@ -179,12 +199,56 @@ class CodeWriter:
         '''
         if cmd_type == CommandType.PUSH:
             self.push(segment, index)
+        if cmd_type == CommandType.POP:
+            self.pop(segment, index)
 
     def push(self, segment, index):
         if segment == CONSTANT:
             self.write_line('@{index}'.format(index=index))
             self.write_line('D=A')
             self.push_D_register()
+        elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
+            self.calculate_address(segment, index)
+            self.write_line('D=M')
+            self.push_D_register()
+        elif segment == TEMP:
+            self.calculate_offset(segment, index)
+            self.write_line('D=M')
+            self.push_D_register()
+        else:
+            assert False, 'unsupported segment {segment}'.format(segment=segment)
+
+    def pop(self, segment, index):
+        if segment in [LOCAL, ARGUMENT, THIS, THAT]:
+            self.calculate_address(segment, index)
+            self.store_at_address()
+        elif segment == TEMP:
+            self.calculate_offset(segment, index)
+            self.store_at_address()
+        else:
+            assert False, 'unsupported segment {segment}'.format(segment=segment)
+
+    def store_at_address(self):
+        self.write_line('@R13')
+        self.write_line('M=D')
+        self.decrement_stack()
+        self.write_line('D=M')
+        self.write_line('@R13')
+        self.write_line('A=M')
+        self.write_line('M=D')
+
+    def calculate_address(self, segment, index):
+        self.write_line(SEGMENTS[segment])
+        self.write_line('A=M')
+        self.write_line('D=A')
+        self.write_line('@{index}'.format(index=index))
+        self.write_line('AD=D+A')
+
+    def calculate_offset(self, segment, index):
+        self.write_line(SEGMENTS[segment])
+        self.write_line('D=A')
+        self.write_line('@{index}'.format(index=index))
+        self.write_line('AD=D+A')
 
     def write_line(self, line):
         self.file.write(line)
@@ -219,8 +283,10 @@ def translate(parser, writer):
         parser.advance()
         if parser.command_type() == CommandType.ARITHMETIC:
             writer.write_arithmetic(parser.arg1())
-        elif parser.command_type() == CommandType.PUSH:
+        elif parser.command_type() in [CommandType.PUSH, CommandType.POP]:
             writer.write_push_pop(parser.command_type(), parser.arg1(), parser.arg2())
+        else:
+            assert False, 'Unsupported line {cmd}'.format(cmd=parser.current_line)
 
 def main():
     path = Path(sys.argv[1])
