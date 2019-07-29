@@ -106,6 +106,7 @@ class CodeWriter:
         '''
         self.file = open(out_file_name, 'w')
         self.file_name = None
+        self.unique_id = 0
 
     def set_file_name(self, file_name):
         '''
@@ -113,39 +114,73 @@ class CodeWriter:
         '''
         self.file_name = file_name
 
+    def generate_label(self, label):
+        '''
+        returns a label in the form file.function$target
+        '''
+        pass
+
+    def generate_unique_label(self, comp):
+        '''
+        returns a label in the form comp####
+        '''
+        result = '{comp}{num}'.format(comp=comp, num=self.unique_id)
+        self.unique_id += 1
+        return result
+
     def write_arithmetic(self, command):
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
         '''
         OPERAND = {
             ADD :       'M=D+M',
-            SUB :       'M=D-M',
-            NEG :       'M=-D',
-            LESS :      'less than 0',
-            EQUAL :     'equal to 0',
-            GREATER :   'greater than 0',
+            SUB :       'M=M-D',
+            NEG :       'M=-M',
+            LESS :      'D;JLT',
+            EQUAL :     'D;JEQ',
+            GREATER :   'D;JGT',
             AND :       'M=D&M',
             OR :        'M=D|M',
-            NOT :       'M=!D'
+            NOT :       'M=!M'
         }
+
         if command in [NEG, NOT]:
-            self.pop_D_register()
+            self.decrement_stack()
             self.write_line(OPERAND[command])
-            self.push_D_register()
+            self.increment_stack()
         elif command in [ADD, SUB, AND, OR]:
             self.pop_D_register()
             self.decrement_stack()
             self.write_line(OPERAND[command])
             self.increment_stack()
+        elif command in [LESS, EQUAL, GREATER]:
+            self.pop_D_register()
+            IS_TRUE = self.generate_unique_label('{cmd}_TRUE'.format(cmd=command))
+            IS_FALSE = self.generate_unique_label('{cmd}_FALSE'.format(cmd=command))
+            DONE = self.generate_unique_label('{cmd}_DONE'.format(cmd=command))
+            self.decrement_stack()
+            self.write_line('D=M-D')
+            self.write_line('@{jump}'.format(jump=IS_TRUE))
+            self.write_line(OPERAND[command])
+            self.write_line('({false})'.format(false=IS_FALSE))
+            self.write_line('@0')
+            self.write_line('D=A')
+            self.write_line('@{jump}'.format(jump=DONE))
+            self.write_line('0;JMP')
+            self.write_line('({true})'.format(true=IS_TRUE))
+            self.write_line('@0')
+            self.write_line('D=A-1')
+            self.write_line('({done})'.format(done=DONE))
+            self.push_D_register()
 
     def write_push_pop(self, cmd_type, segment, index):
         '''
         Writes to the output file the assembly code that implements the given push/pop command
         '''
         if cmd_type == CommandType.PUSH:
-            self.write_push(segment, index)
+            self.push(segment, index)
 
-    def write_push(self, segment, index):
+    def push(self, segment, index):
         if segment == CONSTANT:
             self.write_line('@{index}'.format(index=index))
             self.write_line('D=A')
