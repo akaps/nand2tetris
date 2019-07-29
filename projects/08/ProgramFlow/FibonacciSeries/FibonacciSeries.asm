@@ -128,13 +128,11 @@ D=M-D
 @eq_TRUE$0
 D;JEQ
 (eq_FALSE$1)
-@0
-D=A
+D=0
 @eq_DONE$2
 0;JMP
 (eq_TRUE$0)
-@0
-D=A-1
+D=-1
 (eq_DONE$2)
 @SP
 A=M
