@@ -16,6 +16,8 @@ OR = 'or'
 NOT = 'not'
 PUSH = 'push'
 POP = 'pop'
+LABEL = 'label'
+IF_GOTO = 'if-goto'
 
 CONSTANT = 'constant'
 LOCAL = 'local'
@@ -95,6 +97,10 @@ class Parser:
             return CommandType.PUSH
         elif command == POP:
             return CommandType.POP
+        elif command == LABEL:
+            return CommandType.LABEL
+        elif command == IF_GOTO:
+            return CommandType.IF
         else:
             assert False, 'Unsupported type for command {cmd}'.format(cmd=self.current_line[0])
 
@@ -139,7 +145,7 @@ class CodeWriter:
         '''
         returns a label in the form file.function$target
         '''
-        pass
+        return '{file_name}:{label}'.format(file_name=self.file_name, label=label)
 
     def generate_unique_label(self, comp):
         '''
@@ -210,6 +216,25 @@ class CodeWriter:
             self.push(segment, index)
         if cmd_type == CommandType.POP:
             self.pop(segment, index)
+
+    def write_label(self, label):
+        '''
+        Writes to the output file the assembly code that translates the label command
+        '''
+        label = self.generate_label(label)
+        self.write_line('({label})'.format(label=label))
+
+    def write_if(self, label):
+        '''
+        Writes to the output file the assembly code that translates the if-goto command
+        '''
+        label = self.generate_label(label)
+        self.push(CONSTANT, 0)
+        self.write_arithmetic(EQUAL)
+        self.decrement_stack()
+        self.write_line('D=M')
+        self.write_line('@{label}'.format(label=label))
+        self.write_line('D;JEQ')
 
     def push(self, segment, index):
         if segment == CONSTANT:
@@ -304,6 +329,10 @@ def translate(parser, writer):
             writer.write_arithmetic(parser.arg1())
         elif parser.command_type() in [CommandType.PUSH, CommandType.POP]:
             writer.write_push_pop(parser.command_type(), parser.arg1(), parser.arg2())
+        elif parser.command_type() == CommandType.LABEL:
+            writer.write_label(parser.arg1())
+        elif parser.command_type() == CommandType.IF:
+            writer.write_if(parser.arg1())
         else:
             assert False, 'Unsupported line {cmd}'.format(cmd=parser.current_line)
 
