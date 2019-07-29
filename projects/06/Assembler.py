@@ -1,5 +1,5 @@
 import sys
-import os
+from pathlib import Path
 import re
 from enum import Enum
 
@@ -143,12 +143,14 @@ class Parser:
     In addition, removes all white space and comments.
     '''
 
-    def __init__(self, lines):
+    def __init__(self, file_name):
         '''
         Open the file at file_name and prepare to parse it
         Generate a stream instance to use in other methods
         '''
-        self.lines = self.remove_decorators(lines)
+        file = open(file_name, 'r')
+        self.lines = self.remove_decorators(file.readlines())
+        file.close()
         self.reset()
         self.symbol_table = SymbolTable()
 
@@ -169,40 +171,6 @@ class Parser:
             if line:
                 res.append(line.strip())
         return res
-
-    def preprocess(self):
-        instruction = 0
-        while self.has_more_commands():
-            self.advance()
-            if self.command_type() == CommandType.LOAD:
-                self.symbol_table.add_pair(self.symbol(), instruction)
-            else:
-                instruction += 1
-        self.reset()
-
-    def parse_assembly(self):
-        self.preprocess()
-        commands = []
-        next_var = 16
-        while self.has_more_commands():
-            self.advance()
-            cmd_type = self.command_type()
-            if cmd_type == CommandType.ADDRESS:
-                symbol = self.symbol()
-                if not symbol.isdigit():
-                    if self.symbol_table.contains(symbol):
-                        symbol = self.symbol_table.get_address(symbol)
-                    else:
-                        self.symbol_table.add_pair(symbol, next_var)
-                        symbol = next_var
-                        next_var += 1
-                next_command = '0{value:015b}'.format(value=int(symbol))
-            if cmd_type == CommandType.COMPUTE:
-                next_command = '111{comp}{dest}{jump}'.format(comp=self.comp(), dest=self.dest(), jump=self.jump())
-            if cmd_type != CommandType.LOAD:
-                #ignore loads
-                commands.append(next_command)
-        return commands
 
     def has_more_commands(self):
         '''
@@ -280,26 +248,53 @@ class Parser:
             _, jump = re.split(SEMI_COLON_REGEX, self.current_command)
         return Code.jump(jump)
 
+def generate_symbols(parser, symbol_table):
+    instruction = 0
+    while parser.has_more_commands():
+        parser.advance()
+        if parser.command_type() == CommandType.LOAD:
+            symbol_table.add_pair(parser.symbol(), instruction)
+        else:
+            instruction += 1
+    parser.reset()
+
+def parse_assembly(parser, symbol_table, outfile):
+    next_var = 16
+    while parser.has_more_commands():
+        parser.advance()
+        cmd_type = parser.command_type()
+        if cmd_type == CommandType.ADDRESS:
+            symbol = parser.symbol()
+            if not symbol.isdigit():
+                if symbol_table.contains(symbol):
+                    symbol = symbol_table.get_address(symbol)
+                else:
+                    symbol_table.add_pair(symbol, next_var)
+                    symbol = next_var
+                    next_var += 1
+            next_command = '0{value:015b}'.format(value=int(symbol))
+        if cmd_type == CommandType.COMPUTE:
+            next_command = '111{comp}{dest}{jump}'.format(comp=parser.comp(), dest=parser.dest(), jump=parser.jump())
+        if cmd_type != CommandType.LOAD:
+            #ignore loads
+            outfile.write(next_command + '\n')
+
 def main():
-    #initialize the assembler
-    file_name = sys.argv[1]
-    file = open(file_name, 'r')
-    lines = file.readlines()
-    parser = Parser(lines)
-    file.close()
+    path = Path(sys.argv[1])
+    parser = Parser(path)
+    symbol_table = SymbolTable()
 
-    #perform the translation
-    result = parser.parse_assembly()
+    generate_symbols(parser, symbol_table)
 
-    #output results to file
-    name, ext = os.path.basename(file_name).split('.')
-    ext = 'hack'
-    write_file = '{name}.{ext}'.format(name=name, ext=ext)
+    parent = path.parent
+    name = '{name}.hack'.format(name=path.stem)
+    write_file = parent.joinpath(name)
     outfile = open(write_file, 'w')
-    for line in result:
-        outfile.write(line + '\n')
+
+    parse_assembly(parser, symbol_table, outfile)
+
     outfile.close()
-    print('created file {name}.{ext}'.format(name=name, ext=ext))
+    print('created file {file}'.format(file=write_file))
 
 if __name__ == '__main__':
     main()
