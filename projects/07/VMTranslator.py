@@ -18,6 +18,7 @@ PUSH = 'push'
 POP = 'pop'
 LABEL = 'label'
 IF_GOTO = 'if-goto'
+GOTO = 'goto'
 
 CONSTANT = 'constant'
 LOCAL = 'local'
@@ -101,6 +102,8 @@ class Parser:
             return CommandType.LABEL
         elif command == IF_GOTO:
             return CommandType.IF
+        elif command == GOTO:
+            return CommandType.GOTO
         else:
             assert False, 'Unsupported type for command {cmd}'.format(cmd=self.current_line[0])
 
@@ -236,6 +239,14 @@ class CodeWriter:
         self.write_line('@{label}'.format(label=label))
         self.write_line('D;JEQ')
 
+    def write_goto(self, label):
+        '''
+        Writes to the output file the assembly code that translates the goto command
+        '''
+        label = self.generate_label(label)
+        self.write_line('@{label}'.format(label=label))
+        self.write_line('0;JMP')
+
     def push(self, segment, index):
         if segment == CONSTANT:
             self.write_line('@{index}'.format(index=index))
@@ -333,6 +344,8 @@ def translate(parser, writer):
             writer.write_label(parser.arg1())
         elif parser.command_type() == CommandType.IF:
             writer.write_if(parser.arg1())
+        elif parser.command_type() == CommandType.GOTO:
+            writer.write_goto(parser.arg1())
         else:
             assert False, 'Unsupported line {cmd}'.format(cmd=parser.current_line)
 
