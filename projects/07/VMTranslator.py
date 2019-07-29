@@ -427,12 +427,14 @@ class CodeWriter:
     def calculate_address(self, segment, index):
         self.write_line(SEGMENTS[segment])
         self.write_line('A=M')
-        self.write_line('D=A')
-        self.write_line('@{index}'.format(index=index))
-        self.write_line('AD=D+A')
+        self.add_by_index(index)
 
     def calculate_offset(self, segment, index):
         self.write_line(SEGMENTS[segment])
+        self.add_by_index(index)
+
+
+    def add_by_index(self, index):
         self.write_line('D=A')
         self.write_line('@{index}'.format(index=index))
         self.write_line('AD=D+A')
