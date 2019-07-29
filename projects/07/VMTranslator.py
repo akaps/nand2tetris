@@ -24,6 +24,7 @@ THIS = 'this'
 THAT = 'that'
 TEMP = 'temp'
 POINTER = 'pointer'
+STATIC = 'static'
 
 SEGMENTS = {
     LOCAL :     '@LCL',
@@ -148,6 +149,12 @@ class CodeWriter:
         self.unique_id += 1
         return result
 
+    def static_label(self, index):
+        '''
+        returns a label for static variable i in the form f.i
+        '''
+        return '{file}.{index}'.format(file=self.file_name, index=index)
+
     def write_arithmetic(self, command):
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
@@ -217,6 +224,11 @@ class CodeWriter:
             self.calculate_offset(segment, index)
             self.write_line('D=M')
             self.push_D_register()
+        elif segment == STATIC:
+            label = self.static_label(index)
+            self.write_line('@{label}'.format(label=label))
+            self.write_line('D=M')
+            self.push_D_register()
         else:
             assert False, 'unsupported segment {segment}'.format(segment=segment)
 
@@ -226,6 +238,11 @@ class CodeWriter:
             self.store_at_address()
         elif segment in [TEMP, POINTER]:
             self.calculate_offset(segment, index)
+            self.store_at_address()
+        elif segment == STATIC:
+            label = self.static_label(index)
+            self.write_line('@{label}'.format(label=label))
+            self.write_line('D=A')
             self.store_at_address()
         else:
             assert False, 'unsupported segment {segment}'.format(segment=segment)
@@ -296,6 +313,7 @@ def main():
     out_file_name = '{stem}.asm'.format(stem=path.stem)
     writer = CodeWriter(path.parent.joinpath(out_file_name))
 
+    writer.set_file_name(path.stem)
     translate(parser, writer)
 
     writer.close()
