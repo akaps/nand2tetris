@@ -23,6 +23,7 @@ IF_GOTO = 'if-goto'
 GOTO = 'goto'
 FUNCTION = 'function'
 RETURN = 'return'
+CALL = 'call'
 
 CONSTANT = 'constant'
 LOCAL = 'local'
@@ -112,6 +113,8 @@ class Parser:
             return CommandType.FUNCTION
         elif command == RETURN:
             return CommandType.RETURN
+        elif command == CALL:
+            return CommandType.CALL
         else:
             assert False, 'Unsupported type for command {cmd}'.format(cmd=self.current_line[0])
 
@@ -325,6 +328,57 @@ class CodeWriter:
         self.write_line('A=M')
         self.write_line('0;JMP')
 
+    def write_init(self):
+        '''
+        Writes the assembly that begins the initialization
+        '''
+        self.write_line('@256')
+        self.write_line('D=A')
+        self.write_line('@SP')
+        self.write_line('M=D')
+        self.write_call('Sys.init', 0)
+
+    def write_call(self, function_name, n_args):
+        return_label = self.generate_label('{name}$return'.format(name=function_name))
+        #push return address
+        self.write_line('@{label}'.format(label=return_label))
+        self.write_line('D=A')
+        self.push_D_register()
+        #push LCL
+        self.write_line(SEGMENTS[LOCAL])
+        self.write_line('D=M')
+        self.push_D_register()
+        #push ARG
+        self.write_line(SEGMENTS[ARGUMENT])
+        self.write_line('D=M')
+        self.push_D_register()
+        #push THIS
+        self.write_line(SEGMENTS[THIS])
+        self.write_line('D=M')
+        self.push_D_register()
+        #push THAT
+        self.write_line(SEGMENTS[THAT])
+        self.write_line('D=M')
+        self.push_D_register()
+        #arg = SP-n-5
+        self.write_line('@SP')
+        self.write_line('D=M')
+        self.write_line('@{num}'.format(num=n_args))
+        self.write_line('D=D-A')
+        self.write_line('@5')
+        self.write_line('D=D-A')
+        self.write_line('@ARG')
+        self.write_line('M=D')
+        #LCL = SP
+        self.write_line('@SP')
+        self.write_line('D=M')
+        self.write_line('@LCL')
+        self.write_line('M=D')
+        #goto f
+        self.write_goto(function_name)
+        #(return address)
+        self.write_line('({label})'.format(label=return_label))
+
     def push(self, segment, index):
         if segment == CONSTANT:
             self.write_line('@{index}'.format(index=index))
@@ -428,6 +482,8 @@ def translate(parser, writer):
             writer.write_function(parser.arg1(), parser.arg2())
         elif parser.command_type() == CommandType.RETURN:
             writer.write_return()
+        elif parser.command_type() == CommandType.CALL:
+            writer.write_call(parser.arg1(), parser.arg2())
         else:
             assert False, 'Unsupported line {cmd}'.format(cmd=parser.current_line)
 
@@ -454,7 +510,8 @@ def get_write_path(parent, name):
 def translate_files(files, write_name, bootstrap):
     writer = CodeWriter(write_name)
     if bootstrap:
-        assert False, 'boottstrap code not implemented'
+        writer.set_file_name('Sys')
+        writer.write_init()
     for file_name in files:
         print('Parsing {file}'.format(file=file_name))
         parser=Parser(file_name)
