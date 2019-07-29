@@ -23,13 +23,15 @@ ARGUMENT = 'argument'
 THIS = 'this'
 THAT = 'that'
 TEMP = 'temp'
+POINTER = 'pointer'
 
 SEGMENTS = {
     LOCAL :     '@LCL',
     ARGUMENT :  '@ARG',
     THIS :      '@THIS',
     THAT :      '@THAT',
-    TEMP :      '@5'
+    TEMP :      '@5',
+    POINTER :   '@3'
 }
 
 class CommandType(Enum):
@@ -211,7 +213,7 @@ class CodeWriter:
             self.calculate_address(segment, index)
             self.write_line('D=M')
             self.push_D_register()
-        elif segment == TEMP:
+        elif segment in [TEMP, POINTER]:
             self.calculate_offset(segment, index)
             self.write_line('D=M')
             self.push_D_register()
@@ -222,7 +224,7 @@ class CodeWriter:
         if segment in [LOCAL, ARGUMENT, THIS, THAT]:
             self.calculate_address(segment, index)
             self.store_at_address()
-        elif segment == TEMP:
+        elif segment in [TEMP, POINTER]:
             self.calculate_offset(segment, index)
             self.store_at_address()
         else:
