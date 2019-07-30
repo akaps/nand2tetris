@@ -425,7 +425,6 @@ class CodeWriter:
         self.write_line(SEGMENTS[segment])
         self.add_by_index(index)
 
-
     def add_by_index(self, index):
         self.write_line('D=A')
         self.write_line('@{index}'.format(index=index))
