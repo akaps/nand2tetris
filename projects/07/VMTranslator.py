@@ -165,7 +165,10 @@ class CodeWriter:
         '''
         returns a label in the form comp$####
         '''
-        result = '{comp}${num}'.format(comp=comp, num=self.unique_id)
+        result = '{file_name}:{comp}${num}'.format(
+            file_name=self.file_name,
+            comp=comp,
+            num=self.unique_id)
         self.unique_id += 1
         return result
 
