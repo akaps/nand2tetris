@@ -260,7 +260,7 @@ class CodeWriter:
         '''
         Writes to the output file the assembly code that translates the function command
         '''
-        self.write_label(function_name)
+        self.write_line('({label})'.format(label=function_name))
         for _ in range(int(num_locals)):
             self.push(CONSTANT, 0)
 
@@ -331,7 +331,7 @@ class CodeWriter:
         self.write_call('Sys.init', 0)
 
     def write_call(self, function_name, n_args):
-        return_label = self.generate_label('{name}$return'.format(name=function_name))
+        return_label = self.generate_unique_label('{name}$return'.format(name=function_name))
         #push return address
         self.write_line('@{label}'.format(label=return_label))
         self.write_line('D=A')
@@ -367,7 +367,8 @@ class CodeWriter:
         self.write_line('@LCL')
         self.write_line('M=D')
         #goto f
-        self.write_goto(function_name)
+        self.write_line('@{label}'.format(label=function_name))
+        self.write_line('0;JMP')
         #(return address)
         self.write_line('({label})'.format(label=return_label))
 
