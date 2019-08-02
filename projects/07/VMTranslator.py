@@ -1,79 +1,58 @@
 import sys
-from pathlib import Path
+import argparse
 from enum import Enum
+from pathlib import Path
 
-VM_EXTENSION = '.vm'
-ASSEMBLY_EXTENSION = '.asm'
-
-#commonly used delimeters
-COMMENT = '//'
+COMMENT  = '//'
 NEWLINE = '\n'
+VM = '.vm'
 
-class CmdType(Enum):
-    C_ARITHMETIC = 0 #form: add/sub/neg/eq/gt/lt/and/or/not
-    C_PUSH = 1 #form: push segment index. push value of segment[index] to stack
-    C_POP = 2 #form: pop segment index. pop topmost stack element and store in segment[index]
-    C_LABEL = 3 #label for goto
-    C_GOTO = 4 #unconditional branching
-    C_IF = 5 #conditional branching
-    C_FUNCTION = 6 #form: functionName nLocals. includes number of variables
-    C_RETURN = 7 #transfer control back to calling function
-    C_CALL = 8 #form: call functionName nArgs
+ADD = 'add'
+SUB = 'sub'
+NEG = 'neg'
+EQUAL = 'eq'
+GREATER = 'gt'
+LESS = 'lt'
+AND = 'and'
+OR = 'or'
+NOT = 'not'
+PUSH = 'push'
+POP = 'pop'
+LABEL = 'label'
+IF_GOTO = 'if-goto'
+GOTO = 'goto'
+FUNCTION = 'function'
+RETURN = 'return'
+CALL = 'call'
 
-ADD         = 'add'
-SUB         = 'sub'
-NEG         = 'neg'
-EQ          = 'eq'
-GT          = 'gt'
-LT          = 'lt'
-AND         = 'and'
-OR          = 'or'
-NOT         = 'not'
-PUSH        = 'push'
-POP         = 'pop'
-LABEL       = 'label'
-GOTO        = 'goto'
-IF          = 'if-goto'
-FUNCTION    = 'function'
-CALL        = 'call'
-RETURN      = 'return'
-
-COMMAND_TYPES = {
-    ADD         : CmdType.C_ARITHMETIC,
-    SUB         : CmdType.C_ARITHMETIC,
-    NEG         : CmdType.C_ARITHMETIC,
-    EQ          : CmdType.C_ARITHMETIC,
-    GT          : CmdType.C_ARITHMETIC,
-    LT          : CmdType.C_ARITHMETIC,
-    AND         : CmdType.C_ARITHMETIC,
-    OR          : CmdType.C_ARITHMETIC,
-    NOT         : CmdType.C_ARITHMETIC,
-    PUSH        : CmdType.C_PUSH,
-    POP         : CmdType.C_POP,
-    LABEL       : CmdType.C_LABEL,
-    GOTO        : CmdType.C_GOTO,
-    IF          : CmdType.C_IF,
-    FUNCTION    : CmdType.C_FUNCTION,
-    CALL        : CmdType.C_CALL,
-    RETURN      : CmdType.C_RETURN
-}
-
-CONSTANT    = 'constant'
-LOCAL       = 'local'
-ARGUMENT    = 'argument'
-THIS        = 'this'
-THAT        = 'that'
-POINTER     = 'pointer'
-TEMP        = 'temp'
+CONSTANT = 'constant'
+LOCAL = 'local'
+ARGUMENT = 'argument'
+THIS = 'this'
+THAT = 'that'
+TEMP = 'temp'
+POINTER = 'pointer'
+STATIC = 'static'
 
 SEGMENTS = {
-    LOCAL     : 'LCL',
-    ARGUMENT  : 'ARG',
-    THIS      : 'THIS',
-    THAT      : 'THAT',
-    POINTER   : 3,
-    TEMP      : 5
+    LOCAL :     '@LCL',
+    ARGUMENT :  '@ARG',
+    THIS :      '@THIS',
+    THAT :      '@THAT',
+    TEMP :      '@5',
+    POINTER :   '@3'
 }
+
+class CommandType(Enum):
+    ARITHMETIC = 0
+    PUSH = 1
+    POP = 2
+    LABEL = 3
+    GOTO = 4
+    IF = 5
+    FUNCTION = 6
+    RETURN = 7
+    CALL = 8
 
 class Parser:
     '''
@@ -84,54 +63,69 @@ class Parser:
         Prepares to parse the input vm lines
         '''
         file = open(file_name, 'r')
-        self.lines = self.preprocess(file.readlines())
+        self.lines = self.strip_lines(file.readlines())
         file.close()
-        self.next_command = 0
-        self.current_command = None
+        self.next_line = 0
+        self.current_line = None
 
-    def preprocess(self, lines):
+    def strip_lines(self, lines):
         result = []
         for line in lines:
-            line=line.strip()
+            line = line.strip()
             if COMMENT in line:
-                comment_index= line.index(COMMENT)
-                line = line[:comment_index]
+                comment_index = line.index(COMMENT)
+                line = line[:comment_index].strip()
             if line:
-                line = line.strip().split()
-                for index, element in enumerate(line):
-                    if element.isdigit():
-                        line[index] = int(element)
                 result.append(line)
-
         return result
 
     def has_more_commands(self):
         '''
         Returns true if there are more commands in the input
         '''
-        return self.next_command < len(self.lines)
+        return self.next_line < len(self.lines)
 
     def advance(self):
         '''
         Reads the next command from the input and makes it the current command
         '''
-        self.current_command = self.lines[self.next_command]
-        self.next_command += 1
+        self.current_line = self.lines[self.next_line].split()
+        self.next_line += 1
 
     def command_type(self):
         '''
         Returns a constant representing the type of the current command
         '''
-        return COMMAND_TYPES[self.current_command[0]]
+        command = self.current_line[0]
+        if command in [ADD, SUB, NEG, EQUAL, LESS, GREATER, AND, OR, NOT]:
+            return CommandType.ARITHMETIC
+        elif command == PUSH:
+            return CommandType.PUSH
+        elif command == POP:
+            return CommandType.POP
+        elif command == LABEL:
+            return CommandType.LABEL
+        elif command == IF_GOTO:
+            return CommandType.IF
+        elif command == GOTO:
+            return CommandType.GOTO
+        elif command == FUNCTION:
+            return CommandType.FUNCTION
+        elif command == RETURN:
+            return CommandType.RETURN
+        elif command == CALL:
+            return CommandType.CALL
+        else:
+            assert False, 'Unsupported type for command {cmd}'.format(cmd=self.current_line[0])
 
     def arg1(self):
         '''
         Returns the first argument of the current command. In the case of C_ARITHMETIC, the command (add, sub, ...) is returned instead
         Should not be called if the type is C_RETURN
         '''
-        if self.command_type() == CmdType.C_ARITHMETIC:
-            return self.current_command[0]
-        return self.current_command[1]
+        if self.command_type() == CommandType.ARITHMETIC:
+            return self.current_line[0]
+        return self.current_line[1]
 
     def arg2(self):
         '''
@@ -141,7 +135,7 @@ class Parser:
             C_FUNCTION
             C_CALL
         '''
-        return int(self.current_command[2])
+        return self.current_line[2]
 
 class CodeWriter:
     '''
@@ -152,149 +146,315 @@ class CodeWriter:
         Prepares the output file to write into
         '''
         self.file = open(out_file_name, 'w')
-        self.labels = []
+        self.file_name = None
+        self.unique_id = 0
 
     def set_file_name(self, file_name):
-        path = Path(file_name)
-        self.file_name, _ = path.name.split('.')
+        '''
+        Informs the code writer that the translation of a new VM file is started
+        '''
+        self.file_name = file_name
 
-    def generate_label(self, id):
-        result = '{file}.{id}'.format(file=self.file_name, id=id)
-        if type(id) is not int:
-            i = 1
-            while result in self.labels:
-                result = '{file}.{id}.{num}'.format(file=self.file_name, id=id, num=i)
-                i += 1
-            self.labels.append(result)
+    def generate_label(self, label):
+        '''
+        returns a label in the form file.function$target
+        '''
+        return '{file_name}:{label}'.format(file_name=self.file_name, label=label)
+
+    def generate_unique_label(self, comp):
+        '''
+        returns a label in the form comp$####
+        '''
+        result = '{file_name}:{comp}${num}'.format(
+            file_name=self.file_name,
+            comp=comp,
+            num=self.unique_id)
+        self.unique_id += 1
         return result
+
+    def static_label(self, index):
+        '''
+        returns a label for static variable i in the form f.i
+        '''
+        return '{file}.{index}'.format(file=self.file_name, index=index)
 
     def write_arithmetic(self, command):
         '''
         Writes to the output file the assembly code that implements the given arithmetic command
         '''
-        OP_LINE = {
-            ADD : 'M=D+M',
-            SUB : 'M=M-D',
-            NEG : 'M=-M',
-            AND : 'M=D&M',
-            OR  : 'M=D|M',
-            NOT : 'M=!M',
-            EQ  : 'D;JEQ',
-            GT  : 'D;JGT',
-            LT  : 'D;JLT'
+        OPERAND = {
+            ADD :       'M=D+M',
+            SUB :       'M=M-D',
+            NEG :       'M=-M',
+            LESS :      'D;JLT',
+            EQUAL :     'D;JEQ',
+            GREATER :   'D;JGT',
+            AND :       'M=D&M',
+            OR :        'M=D|M',
+            NOT :       'M=!M'
         }
-        if command in [ADD, SUB, NEG, AND, OR, NOT]:
-            self.write_decrement_sp()
-            if command in [NEG, NOT]:
-                self.write_line(OP_LINE[command])
-            else:
-                self.write_line('D=M')
-                self.write_decrement_sp()
-                self.write_line(OP_LINE[command])
-        elif command in [EQ, GT, LT]:
-            COMP_TRUE = self.generate_label('{cmd}_TRUE'.format(cmd=command))
-            COMP_DONE = self.generate_label('{cmd}_DONE'.format(cmd=command))
-            self.write_load_comparison(COMP_TRUE)
-            self.write_line(OP_LINE[command])
-            self.write_push_true_false(COMP_DONE, COMP_TRUE)
-        self.write_increment_sp()
 
-    def write_load_comparison(self, CASE_TRUE):
-        self.write_decrement_sp()
-        self.write_line('D=M')
-        self.write_decrement_sp()
-        self.write_line('D=M-D')
-        self.write_line('@{label}'.format(label=CASE_TRUE))
-
-    def write_push_true_false(self, CASE_DONE, CASE_TRUE):
-        self.write_line('@0')
-        self.write_line('D=A')
-        self.write_line('@{label}'.format(label=CASE_DONE))
-        self.write_line('0;JMP')
-        self.write_line('({label})'.format(label=CASE_TRUE))
-        self.write_line('@0')
-        self.write_line('D=A-1')
-        self.write_line('({label})'.format(label=CASE_DONE))
-        self.write_line('@SP')
-        self.write_line('A=M')
-        self.write_line('M=D')
-
-    def write_increment_sp(self):
-        '''Update the stack pointer assuming a push occurred'''
-        self.write_line('@SP')
-        self.write_line('M=M+1')
-
-    def write_decrement_sp(self):
-        '''Update the stack pointer assuming a pop occurred. M contains the popped value'''
-        self.write_line('@SP')
-        self.write_line('AM=M-1')
+        if command in [NEG, NOT]:
+            self.decrement_stack()
+            self.write_line(OPERAND[command])
+            self.increment_stack()
+        elif command in [ADD, SUB, AND, OR]:
+            self.pop_D_register()
+            self.decrement_stack()
+            self.write_line(OPERAND[command])
+            self.increment_stack()
+        elif command in [LESS, EQUAL, GREATER]:
+            self.pop_D_register()
+            IS_TRUE = self.generate_unique_label('{cmd}_TRUE'.format(cmd=command))
+            IS_FALSE = self.generate_unique_label('{cmd}_FALSE'.format(cmd=command))
+            DONE = self.generate_unique_label('{cmd}_DONE'.format(cmd=command))
+            self.decrement_stack()
+            self.write_line('D=M-D')
+            self.write_line('@{jump}'.format(jump=IS_TRUE))
+            self.write_line(OPERAND[command])
+            self.write_line('({false})'.format(false=IS_FALSE))
+            self.write_line('D=0')
+            self.write_line('@{jump}'.format(jump=DONE))
+            self.write_line('0;JMP')
+            self.write_line('({true})'.format(true=IS_TRUE))
+            self.write_line('D=-1')
+            self.write_line('({done})'.format(done=DONE))
+            self.push_D_register()
+        else:
+            assert False, 'unsupported arithmetic expression {expr}'.format(expr=command)
 
     def write_push_pop(self, cmd_type, segment, index):
         '''
         Writes to the output file the assembly code that implements the given push/pop command
         '''
-        if cmd_type == CmdType.C_PUSH:
-            self.write_push(segment, index)
-        if cmd_type == CmdType.C_POP:
-            self.write_pop(segment, index)
+        if cmd_type == CommandType.PUSH:
+            self.push(segment, index)
+        if cmd_type == CommandType.POP:
+            self.pop(segment, index)
 
-    def write_push(self, segment, index):
+    def write_label(self, label):
+        '''
+        Writes to the output file the assembly code that translates the label command
+        '''
+        label = self.generate_label(label)
+        self.write_line('({label})'.format(label=label))
+
+    def write_if(self, label):
+        '''
+        Writes to the output file the assembly code that translates the if-goto command
+        '''
+        label = self.generate_label(label)
+        self.push(CONSTANT, 0)
+        self.write_arithmetic(EQUAL)
+        self.decrement_stack()
+        self.write_line('D=M')
+        self.write_line('@{label}'.format(label=label))
+        self.write_line('D;JEQ')
+
+    def write_goto(self, label):
+        '''
+        Writes to the output file the assembly code that translates the goto command
+        '''
+        label = self.generate_label(label)
+        self.write_line('@{label}'.format(label=label))
+        self.write_line('0;JMP')
+
+    def write_function(self, function_name, num_locals):
+        '''
+        Writes to the output file the assembly code that translates the function command
+        '''
+        self.write_line('({label})'.format(label=function_name))
+        for _ in range(int(num_locals)):
+            self.push(CONSTANT, 0)
+
+    def write_return(self):
+        '''
+        Writes to the output file the assembly code that translates the return command
+        '''
+        #FRAME = LCL where FRAME is a temp variable
+        self.write_line('@LCL')
+        self.write_line('D=M')
+        self.write_line('@R13')
+        self.write_line('M=D')
+        #RET = *(FRAME-5)
+        self.write_line('@5')
+        self.write_line('A=D-A')
+        self.write_line('D=M')
+        self.write_line('@R14')
+        self.write_line('M=D')
+        #*ARG=pop()
+        self.decrement_stack()
+        self.write_line('D=M')
+        self.write_line('@ARG')
+        self.write_line('A=M')
+        self.write_line('M=D')
+        #SP=ARG+1
+        self.write_line('@ARG')
+        self.write_line('A=M')
+        self.write_line('D=A+1')
+        self.write_line('@SP')
+        self.write_line('M=D')
+        #THAT=*(FRAME-1)
+        self.write_line('@R13')
+        self.write_line('AM=M-1')
+        self.write_line('D=M')
+        self.write_line('@THAT')
+        self.write_line('M=D')
+        #THIS=*(FRAME-2)
+        self.write_line('@R13')
+        self.write_line('AM=M-1')
+        self.write_line('D=M')
+        self.write_line('@THIS')
+        self.write_line('M=D')
+        #ARG=*(FRAME-3)
+        self.write_line('@R13')
+        self.write_line('AM=M-1')
+        self.write_line('D=M')
+        self.write_line('@ARG')
+        self.write_line('M=D')
+        #LCL=*(FRAME-4)
+        self.write_line('@R13')
+        self.write_line('AM=M-1')
+        self.write_line('D=M')
+        self.write_line('@LCL')
+        self.write_line('M=D')
+        #goto RET'
+        self.write_line('@R14')
+        self.write_line('A=M')
+        self.write_line('0;JMP')
+
+    def write_init(self):
+        '''
+        Writes the assembly that begins the initialization
+        '''
+        self.write_line('@256')
+        self.write_line('D=A')
+        self.write_line('@SP')
+        self.write_line('M=D')
+        self.write_call('Sys.init', 0)
+
+    def write_call(self, function_name, n_args):
+        return_label = self.generate_unique_label('{name}$return'.format(name=function_name))
+        #push return address
+        self.write_line('@{label}'.format(label=return_label))
+        self.write_line('D=A')
+        self.push_D_register()
+        #push LCL
+        self.write_line(SEGMENTS[LOCAL])
+        self.write_line('D=M')
+        self.push_D_register()
+        #push ARG
+        self.write_line(SEGMENTS[ARGUMENT])
+        self.write_line('D=M')
+        self.push_D_register()
+        #push THIS
+        self.write_line(SEGMENTS[THIS])
+        self.write_line('D=M')
+        self.push_D_register()
+        #push THAT
+        self.write_line(SEGMENTS[THAT])
+        self.write_line('D=M')
+        self.push_D_register()
+        #arg = SP-n-5
+        self.write_line('@SP')
+        self.write_line('D=M')
+        self.write_line('@{num}'.format(num=n_args))
+        self.write_line('D=D-A')
+        self.write_line('@5')
+        self.write_line('D=D-A')
+        self.write_line('@ARG')
+        self.write_line('M=D')
+        #LCL = SP
+        self.write_line('@SP')
+        self.write_line('D=M')
+        self.write_line('@LCL')
+        self.write_line('M=D')
+        #goto f
+        self.write_line('@{label}'.format(label=function_name))
+        self.write_line('0;JMP')
+        #(return address)
+        self.write_line('({label})'.format(label=return_label))
+
+    def push(self, segment, index):
         if segment == CONSTANT:
             self.write_line('@{index}'.format(index=index))
             self.write_line('D=A')
+            self.push_D_register()
         elif segment in [LOCAL, ARGUMENT, THIS, THAT]:
-            self.offset_segment(segment, index)
-            self.write_line('A=D')
+            self.calculate_address(segment, index)
             self.write_line('D=M')
-        elif segment in [POINTER, TEMP]:
-            self.offset_literal(segment, index)
-            self.write_line('A=D')
+            self.push_D_register()
+        elif segment in [TEMP, POINTER]:
+            self.calculate_offset(segment, index)
             self.write_line('D=M')
+            self.push_D_register()
+        elif segment == STATIC:
+            label = self.static_label(index)
+            self.write_line('@{label}'.format(label=label))
+            self.write_line('D=M')
+            self.push_D_register()
         else:
-            #static
-            static_label=self.generate_label(index)
-            self.write_line('@{label}'.format(label=static_label))
-            self.write_line('D=M')
-        self.write_line('@SP')
-        self.write_line('A=M')
-        self.write_line('M=D')
-        self.write_increment_sp()
+            assert False, 'unsupported segment {segment}'.format(segment=segment)
 
-    def write_pop(self, segment, index):
+    def pop(self, segment, index):
         if segment in [LOCAL, ARGUMENT, THIS, THAT]:
-            self.offset_segment(segment, index)
-        elif segment in [POINTER, TEMP]:
-            self.offset_literal(segment, index)
-        else:
-            #static
-            static_label = self.generate_label(index)
-            self.write_line('@{label}'.format(label=static_label))
+            self.calculate_address(segment, index)
+            self.store_at_address()
+        elif segment in [TEMP, POINTER]:
+            self.calculate_offset(segment, index)
+            self.store_at_address()
+        elif segment == STATIC:
+            label = self.static_label(index)
+            self.write_line('@{label}'.format(label=label))
             self.write_line('D=A')
-        self.write_line('@SP')
-        self.write_line('A=M')
+            self.store_at_address()
+        else:
+            assert False, 'unsupported segment {segment}'.format(segment=segment)
+
+    def store_at_address(self):
+        self.write_line('@R13')
         self.write_line('M=D')
-        self.write_decrement_sp()
+        self.decrement_stack()
         self.write_line('D=M')
-        self.write_line('@SP')
-        self.write_line('A=M+1')
+        self.write_line('@R13')
         self.write_line('A=M')
         self.write_line('M=D')
 
-    def offset_literal(self, segment, index):
-        self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
+    def calculate_address(self, segment, index):
+        self.write_line(SEGMENTS[segment])
+        self.write_line('A=M')
+        self.add_by_index(index)
+
+    def calculate_offset(self, segment, index):
+        self.write_line(SEGMENTS[segment])
+        self.add_by_index(index)
+
+    def add_by_index(self, index):
         self.write_line('D=A')
         self.write_line('@{index}'.format(index=index))
-        self.write_line('D=D+A')
-
-    def offset_segment(self, segment, index):
-        self.write_line('@{seg}'.format(seg=SEGMENTS[segment]))
-        self.write_line('D=M')
-        self.write_line('@{index}'.format(index=index))
-        self.write_line('D=D+A')
+        self.write_line('AD=D+A')
 
     def write_line(self, line):
         self.file.write(line)
         self.file.write(NEWLINE)
+
+    def decrement_stack(self):
+        self.write_line('@SP')
+        self.write_line('AM=M-1')
+
+    def increment_stack(self):
+        self.write_line('@SP')
+        self.write_line('M=M+1')
+
+    def pop_D_register(self):
+        self.decrement_stack()
+        self.write_line('D=M')
+
+    def push_D_register(self):
+        self.write_line('@SP')
+        self.write_line('A=M')
+        self.write_line('M=D')
+        self.increment_stack()
 
     def close(self):
         '''
@@ -305,42 +465,75 @@ class CodeWriter:
 def translate(parser, writer):
     while parser.has_more_commands():
         parser.advance()
-        if parser.command_type() == CmdType.C_ARITHMETIC:
+        if parser.command_type() == CommandType.ARITHMETIC:
             writer.write_arithmetic(parser.arg1())
-        if parser.command_type() == CmdType.C_POP or parser.command_type() == CmdType.C_PUSH:
+        elif parser.command_type() in [CommandType.PUSH, CommandType.POP]:
             writer.write_push_pop(parser.command_type(), parser.arg1(), parser.arg2())
+        elif parser.command_type() == CommandType.LABEL:
+            writer.write_label(parser.arg1())
+        elif parser.command_type() == CommandType.IF:
+            writer.write_if(parser.arg1())
+        elif parser.command_type() == CommandType.GOTO:
+            writer.write_goto(parser.arg1())
+        elif parser.command_type() == CommandType.FUNCTION:
+            writer.write_function(parser.arg1(), parser.arg2())
+        elif parser.command_type() == CommandType.RETURN:
+            writer.write_return()
+        elif parser.command_type() == CommandType.CALL:
+            writer.write_call(parser.arg1(), parser.arg2())
+        else:
+            assert False, 'Unsupported line {cmd}'.format(cmd=parser.current_line)
 
-def translate_files(files, write_name):
+def parse_args(args):
+    usage = 'Translates given Hack .vm files for file/directory into .asm file'
+    parser = argparse.ArgumentParser(usage=usage)
+
+    #positional arguments
+    parser.add_argument('path',
+        nargs=1,
+        help='the path of the file(s) to translate')
+
+    #optional arguments
+    parser.add_argument('-n', '--no_bootstrap',
+        dest='bootstrap',
+        default=True,
+        action='store_false',
+        help='translate without bootstrap instructions')
+    return parser.parse_args(args)
+
+def get_write_path(parent, name):
+    return parent.joinpath('{name}.asm'.format(name=name))
+
+def translate_files(files, write_name, bootstrap):
     writer = CodeWriter(write_name)
+    if bootstrap:
+        writer.set_file_name('Sys')
+        writer.write_init()
     for file_name in files:
-        print('parsing {file}'.format(file=file_name))
-        parser = Parser(file_name)
-        writer.set_file_name(file_name)
+        print('Parsing {file}'.format(file=file_name))
+        parser=Parser(file_name)
+        writer.set_file_name(file_name.stem)
         translate(parser, writer)
     writer.close()
 
-def get_write_path(dir, name):
-    write_path = Path(dir)
-    return write_path.joinpath(name + ASSEMBLY_EXTENSION)
+def main(argv):
+    args = parse_args(argv)
+    path = Path(args.path[0])
 
-def main():
-    path = Path(sys.argv[1])
     files = []
-    write_name = ''
+    write_name = None
+
     if path.is_file():
         files.append(path)
-        name, _ = path.name.split('.')
-        write_name = get_write_path(path.parent, name)
+        write_name = get_write_path(path.parent, path.stem)
     else:
         for file_name in path.iterdir():
-            if file_name.suffix == VM_EXTENSION:
+            if file_name.suffix == VM:
                 files.append(file_name)
         write_name = get_write_path(path, path.name)
-    translate_files(files, write_name)
-    print('translated {files}->{output}'.format(
-        files=files,
-        output=write_name
-    ))
+
+    translate_files(files, write_name, args.bootstrap)
+    print('Successfully translated {files} to {output}'.format(files=files, output=write_name))
 
 if __name__ == '__main__':
-    main()
+    main(sys.argv[1:])
