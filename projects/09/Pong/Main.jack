@@ -1,0 +1,12 @@
+/** Initializes Pong and runs the game
+Tetris is cool, but would be more complicated than needed to demonstrate understanding of Jack
+*/
+class Main {
+    function void main() {
+        var PongGame game;
+        let game = PongGame.new();
+        do game.run();
+        do game.dispose();
+        return;
+    }
+}

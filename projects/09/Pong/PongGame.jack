@@ -1,0 +1,10 @@
+/**
+    The game logic for Pong
+    Pong is played with two paddles on opposite sides of the screen. Players rally the ball until it passes a paddle,
+    Where the opposing player scores a point
+    play continues until 21 points, and the winner is announced
+**/
+
+class PongGame {
+
+}
