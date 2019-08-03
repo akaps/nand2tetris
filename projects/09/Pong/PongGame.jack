@@ -6,5 +6,35 @@
 **/
 
 class PongGame {
+    field Ball ball; //the ball between players
+    field Player left; //the left paddle
+    field Player right; //the right paddle
+    field int leftScore; //the current score of the left player
+    field int rightScore; //the current score of the right player
 
+    constructor PongGame new() {
+        //initialize the parts of the game
+        let leftScore = 0;
+        let rightScore = 0;
+        do Screen.drawLine(255, 0, 255, 255);
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void run() {
+        do showScore();
+        return;
+    }
+
+    method void showScore() {
+        do Output.moveCursor(0, 31);
+        do Output.printInt(left);
+        do Output.printString("-");
+        do Output.printInt(right);
+        return;
+    }
 }
