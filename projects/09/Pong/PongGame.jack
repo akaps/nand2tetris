@@ -7,31 +7,55 @@
 
 class PongGame {
     field Ball ball; //the ball between players
-    field Player left; //the left paddle
-    field Player right; //the right paddle
     field int leftScore; //the current score of the left player
     field int rightScore; //the current score of the right player
+    field Paddle leftPaddle; //the left player/paddle. Uses up/down keys
+    field Paddle rightPaddle; // the right player/paddle. uses w/s keys
 
     constructor PongGame new() {
         //initialize the parts of the game
         let leftScore = 0;
         let rightScore = 0;
         let ball = Ball.new(1, 2);
+        let leftPaddle = Paddle.new(2);
+        let rightPaddle = Paddle.new(507);
         return this;
     }
 
     method void dispose() {
+        do ball.dispose();
+        do rightPaddle.dispose();
+        do leftPaddle.dispose();
         do Memory.deAlloc(this);
         return;
     }
 
     method void run() {
         var boolean oob;
+        var char key;
         let oob = false;
         do showScore();
         while (~oob) {
+            let key = Keyboard.keyPressed();
             let oob = ball.update();
-            do Sys.wait(10);
+            do Screen.drawLine(255, 0, 255, 255);
+            if (key = 131) {
+                //up arrow
+                do rightPaddle.moveUp();
+            }
+            if (key = 133) {
+                //down arrow
+                do rightPaddle.moveDown();
+            }
+            if (key = 87) {
+                //w key
+                do leftPaddle.moveUp();
+            }
+            if (key = 83) {
+                //s key
+                do leftPaddle.moveDown();
+            }
+            do Sys.wait(15);
         }
         let leftScore = leftScore + 1;
         do showScore();
@@ -41,9 +65,9 @@ class PongGame {
     method void showScore() {
         do Screen.drawLine(255, 0, 255, 255);
         do Output.moveCursor(0, 31);
-        do Output.printInt(left);
+        do Output.printInt(leftScore);
         do Output.printString("-");
-        do Output.printInt(right);
+        do Output.printInt(rightScore);
         return;
     }
 }

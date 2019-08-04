@@ -1,0 +1,53 @@
+/**
+The paddle for a game of pong
+Paddles can only move up or down via player input, in order to rally the ball back to the opponent
+*/
+class Paddle {
+    field int x; //x position of the upper left corner of the paddle. fixed
+    field int y; //y position of the upper left corner of the paddle. Moves with player input
+
+    /**
+    Constructs a Paddle at the given position
+    **/
+    constructor Paddle new(int initX) {
+        let x = initX;
+        let y = 128 - 14; //paddles are 28 pixels tall
+        do draw();
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, y, x + 2, y + 28);
+        return;
+    }
+
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x, y, x + 2, y + 28);
+        return;
+    }
+
+    method void moveDown() {
+        if ((y + 28) < 254) {
+            do erase();
+            let y = y + 2;
+            do draw();
+        }
+        return;
+    }
+
+    method void moveUp() {
+        if (y > 1) {
+            do erase();
+            let y = y - 2;
+            do draw();
+        }
+      return;
+    }
+}

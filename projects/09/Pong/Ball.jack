@@ -1,6 +1,6 @@
 /**
 The ball for a game of pong
-moves constantly in a given velocity until it reaches the screen bounds or a paddle
+moves constantly with a given velocity until it reaches the screen bounds or a paddle
 **/
 class Ball {
     field int x; //the x position of the center of the ball
@@ -15,7 +15,7 @@ class Ball {
     constructor Ball new(int velocityX, int velocityY) {
         let x = 255;
         let y = 128;
-        let RADIUS = 4;
+        let RADIUS = 3;
         let velX = velocityX;
         let velY = velocityY;
         do draw();
