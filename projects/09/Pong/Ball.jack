@@ -75,4 +75,14 @@ class Ball {
     method int x() {
         return x;
     }
+
+    method int y() {
+        return y;
+    }
+
+    method void bounce(int spin) {
+        let velX = -velX;
+        let velY = velY + spin;
+        return;
+    }
 }

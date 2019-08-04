@@ -57,4 +57,34 @@ class Paddle {
         do draw();
         return;
     }
+
+    method boolean connects(int yPos) {
+        return (yPos > y & (yPos < (y + 28)));
+    }
+
+    method int spin(int yPos) {
+        var int normalized; // yPos normalized to 0 as origin
+        let normalized = yPos - y;
+        if (normalized < 4) {
+            //"edge", high spin up
+            return -2;
+        }
+        if ((normalized > 3) & (normalized < 10)) {
+            //normal spin up
+            return -1;
+        }
+        if ((normalized > 9) & (normalized < 18)) {
+            //sweet spot, no additional spin
+            return 0;
+        }
+        if ((normalized > 17) & (normalized < 23)) {
+            //normal spin down
+            return 1;
+        }
+        if (normalized > 22 ) {
+            //"edge", high spin down
+            return 2;
+        }
+        return 0;
+    }
 }
