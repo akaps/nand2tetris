@@ -31,10 +31,21 @@ class PongGame {
     }
 
     method void run() {
+        while ((~(leftScore = 21)) & (~(rightScore = 21))) {
+            do run_round();
+            do Sys.wait(500); // give the players a chance to see the end
+        }
+        return;
+    }
+
+    method void run_round() {
         var boolean oob;
         var char key;
         let oob = false;
         do showScore();
+        do ball.reset();
+        do leftPaddle.reset();
+        do rightPaddle.reset();
         while (~oob) {
             let key = Keyboard.keyPressed();
             let oob = ball.update();
@@ -57,7 +68,12 @@ class PongGame {
             }
             do Sys.wait(15);
         }
-        let leftScore = leftScore + 1;
+        if (ball.x() > 256) {
+            let leftScore = leftScore + 1;
+        } else {
+            let rightScore = rightScore + 1;
+        }
+
         do showScore();
         return;
     }

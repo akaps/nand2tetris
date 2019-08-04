@@ -11,8 +11,8 @@ class Paddle {
     **/
     constructor Paddle new(int initX) {
         let x = initX;
-        let y = 128 - 14; //paddles are 28 pixels tall
-        do draw();
+        let y = 114;
+        do reset();
         return this;
     }
 
@@ -34,20 +34,27 @@ class Paddle {
     }
 
     method void moveDown() {
-        if ((y + 28) < 254) {
+        if ((y + 28) < 253) {
             do erase();
-            let y = y + 2;
+            let y = y + 3;
             do draw();
         }
         return;
     }
 
     method void moveUp() {
-        if (y > 1) {
+        if (y > 2) {
             do erase();
-            let y = y - 2;
+            let y = y - 3;
             do draw();
         }
       return;
+    }
+
+    method void reset() {
+        do erase();
+        let y = 114; //paddles are 28 pixels tall
+        do draw();
+        return;
     }
 }
