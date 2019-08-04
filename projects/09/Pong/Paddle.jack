@@ -1,0 +1,90 @@
+/**
+The paddle for a game of pong
+Paddles can only move up or down via player input, in order to rally the ball back to the opponent
+*/
+class Paddle {
+    field int x; //x position of the upper left corner of the paddle. fixed
+    field int y; //y position of the upper left corner of the paddle. Moves with player input
+
+    /**
+    Constructs a Paddle at the given position
+    **/
+    constructor Paddle new(int initX) {
+        let x = initX;
+        let y = 114;
+        do reset();
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    method void draw() {
+        do Screen.setColor(true);
+        do Screen.drawRectangle(x, y, x + 2, y + 28);
+        return;
+    }
+
+    method void erase() {
+        do Screen.setColor(false);
+        do Screen.drawRectangle(x, y, x + 2, y + 28);
+        return;
+    }
+
+    method void moveDown() {
+        if ((y + 28) < 253) {
+            do erase();
+            let y = y + 3;
+            do draw();
+        }
+        return;
+    }
+
+    method void moveUp() {
+        if (y > 2) {
+            do erase();
+            let y = y - 3;
+            do draw();
+        }
+      return;
+    }
+
+    method void reset() {
+        do erase();
+        let y = 114; //paddles are 28 pixels tall
+        do draw();
+        return;
+    }
+
+    method boolean connects(int yPos) {
+        return (yPos > y & (yPos < (y + 28)));
+    }
+
+    method int spin(int yPos) {
+        var int normalized; // yPos normalized to 0 as origin
+        let normalized = yPos - y;
+        if (normalized < 4) {
+            //"edge", high spin up
+            return -2;
+        }
+        if ((normalized > 3) & (normalized < 10)) {
+            //normal spin up
+            return -1;
+        }
+        if ((normalized > 9) & (normalized < 18)) {
+            //sweet spot, no additional spin
+            return 0;
+        }
+        if ((normalized > 17) & (normalized < 23)) {
+            //normal spin down
+            return 1;
+        }
+        if (normalized > 22 ) {
+            //"edge", high spin down
+            return 2;
+        }
+        return 0;
+    }
+}
