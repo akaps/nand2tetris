@@ -1,0 +1,5 @@
+class TetrisGame {
+    constructor TetrisGame new() {
+        return;
+    }
+}
