@@ -16,7 +16,7 @@ class PongGame {
         //initialize the parts of the game
         let leftScore = 0;
         let rightScore = 0;
-        do Screen.drawLine(255, 0, 255, 255);
+        let ball = Ball.new(1, 2);
         return this;
     }
 
@@ -26,11 +26,20 @@ class PongGame {
     }
 
     method void run() {
+        var boolean oob;
+        let oob = false;
+        do showScore();
+        while (~oob) {
+            let oob = ball.update();
+            do Sys.wait(10);
+        }
+        let leftScore = leftScore + 1;
         do showScore();
         return;
     }
 
     method void showScore() {
+        do Screen.drawLine(255, 0, 255, 255);
         do Output.moveCursor(0, 31);
         do Output.printInt(left);
         do Output.printString("-");

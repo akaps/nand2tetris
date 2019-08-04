@@ -1,0 +1,62 @@
+/**
+The ball for a game of pong
+moves constantly in a given velocity until it reaches the screen bounds or a paddle
+**/
+class Ball {
+    field int x; //the x position of the center of the ball
+    field int y; //the y position of the center of the ball
+    field int RADIUS; //the radius of the ball, never changes
+    field int velX; // the x velocity of the ball
+    field int velY; // the y velocity of the ball
+
+    /**
+    Constructs a ball in the center of the screen, with a given velocity
+    */
+    constructor Ball new(int velocityX, int velocityY) {
+        let x = 255;
+        let y = 128;
+        let RADIUS = 4;
+        let velX = velocityX;
+        let velY = velocityY;
+        do draw();
+        return this;
+    }
+
+    method void dispose() {
+        do Memory.deAlloc(this);
+        return;
+    }
+
+    /** Draws the ball on the screen. */
+   method void draw() {
+      do Screen.setColor(true);
+      do Screen.drawCircle(x, y, RADIUS);
+      return;
+   }
+
+   /** Erases the ball from the screen. */
+   method void erase() {
+      do Screen.setColor(false);
+      do Screen.drawCircle(x, y, RADIUS);
+      return;
+   }
+
+    method boolean update() {
+        var int newX;
+        var int newY;
+        let newX = x + velX;
+        let newY = y + velY;
+        if (((newX - RADIUS) < 0) | ((newX + RADIUS) > 511)) {
+            return true;
+        }
+        if (((newY - RADIUS) < 0) | ((newY + RADIUS) > 255)) {
+            let velY = -velY;
+            let newY = y + velY;
+        }
+        do erase();
+        let x = newX;
+        let y = newY;
+        do draw();
+        return false;
+    }
+}
