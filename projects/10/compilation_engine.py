@@ -91,7 +91,10 @@ class CompilationEngine:
         '''
         class_var_root = ET.SubElement(self.root, CLASS_VAR_DEC)
         self.add_terminal(class_var_root, self.stream.keyword())
-        self.add_terminal(class_var_root, self.stream.keyword())
+        if self.stream.token_type() == tokenizer.KEYWORD:
+            self.add_terminal(class_var_root, self.stream.keyword())
+        else:
+            self.add_terminal(class_var_root, self.stream.identifier())
         self.add_terminal(class_var_root, self.stream.identifier())
 
         while self.stream.symbol() == COMMA:
@@ -203,7 +206,14 @@ class CompilationEngine:
         '''
         compiles a while statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_while.__name__)
+        while_root = ET.SubElement(root, WHILE)
+        self.add_terminal(while_root, self.stream.keyword())
+        self.add_terminal(while_root, self.stream.symbol())
+        self.compile_expression(while_root)
+        self.add_terminal(while_root, self.stream.symbol())
+        self.add_terminal(while_root, self.stream.symbol())
+        self.compile_statements(while_root)
+        self.add_terminal(while_root, self.stream.symbol())
 
     def compile_return(self, root):
         '''
