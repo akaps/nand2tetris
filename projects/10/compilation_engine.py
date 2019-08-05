@@ -7,6 +7,9 @@ CLASS_VARS = ['static', 'field']
 SUBROUTINE_DEC = 'subroutineDec'
 SUBROUTINES = ['constructor', 'function', 'method']
 
+SUBROUTINE_BODY = 'subroutineBody'
+PARAMETER_LIST = 'parameterList'
+
 '''
 This module effects the actual compilation into XML form. It gets its input from a JackTokenizer and
 writes its parsed XML structure into an output file/stream. This is done by a series of compilexxx()
@@ -68,69 +71,100 @@ class CompilationEngine:
 
         self.add_terminal(class_var_root, self.tokenizer.symbol())
 
-        assert False, 'unimplemented method {name}'.format(name=self.compile_class_var_dec.__name__)
-
     def compile_subroutine(self):
         '''
         compiles a complete method, function, or constructor.
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_subroutine.__name__)
+        subroutine_root = ET.SubElement(self.root, SUBROUTINE_DEC)
+        self.add_terminal(subroutine_root, self.tokenizer.keyword())
+        self.add_terminal(subroutine_root, self.tokenizer.keyword())
+        self.add_terminal(subroutine_root, self.tokenizer.identifier())
 
-    def compile_parameter_list(self):
+        self.add_terminal(subroutine_root, self.tokenizer.symbol())
+        parameter_list = ET.SubElement(subroutine_root, PARAMETER_LIST)
+        self.compile_parameter_list(parameter_list)
+        self.add_terminal(subroutine_root, self.tokenizer.symbol())
+
+        subroutine_body = ET.SubElement(subroutine_root, SUBROUTINE_BODY)
+        self.add_terminal(subroutine_body, self.tokenizer.symbol())
+        while self.tokenizer.token_type() == 'keyword':
+            if self.tokenizer.keyword() == 'identifier':
+                self.compile_var_dec(subroutine_body)
+            else:
+                self.compile_statements(subroutine_body)
+        self.add_terminal(subroutine_root, self.tokenizer.symbol())
+
+    def compile_parameter_list(self, root):
         '''
         compiles a (possibly empty) parameter list, not including the enclosing “()”.
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_parameter_list.__name__)
+        if self.tokenizer.token_type() != 'symbol':
+            self.add_terminal(root, self.tokenizer.keyword())
+            self.add_terminal(root, self.tokenizer.identifier())
 
-    def compile_var_dec(self):
+        while self.tokenizer.token_type() == 'symbol' and self.tokenizer.symbol() == ',':
+            self.add_terminal(root, self.tokenizer.keyword())
+            self.add_terminal(root, self.tokenizer.identifier())
+
+    def compile_var_dec(self, root):
         '''
         compiles a var declaration
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_var_dec.__name__)
 
-    def compile_statements(self):
+    def compile_statements(self, root):
         '''
         compiles a sequence of statements, not including the enclosing “{}”.
         '''
+        if self.tokenizer.keyword() == 'let':
+            self.compile_let(root)
+        if self.tokenizer.keyword() == 'if':
+            self.compile_if(root)
+        if self.tokenizer.keyword() == 'while':
+            self.compile_while(root)
+        if self.tokenizer.keyword() == 'do':
+            self.compile_do(root)
+        if self.tokenizer.keyword() == 'return':
+            self.compile_return(root)
         assert False, 'unimplemented method {name}'.format(name=self.compile_statements.__name__)
 
-    def compile_do(self):
+    def compile_do(self, root):
         '''
         compiles a do statement
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_do.__name__)
 
-    def compile_let(self):
+    def compile_let(self, root):
         '''
         compiles a let statement
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_let.__name__)
 
-    def compile_while(self):
+    def compile_while(self, root):
         '''
         compiles a while statement
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_while.__name__)
 
-    def compile_return(self):
+    def compile_return(self, root):
         '''
         compiles a return statement
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_return.__name__)
 
-    def compile_if(self):
+    def compile_if(self, root):
         '''
         compiles an if statement
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_if.__name__)
 
-    def compile_expression(self):
+    def compile_expression(self, root):
         '''
         compiles an expression
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_expression.__name__)
 
-    def compile_term(self):
+    def compile_term(self, root):
         '''
         compiles a term. This method is faced with a slight difficulty when trying to
         decide between some of the alternative rules. Specifically, if the current token
@@ -142,7 +176,7 @@ class CompilationEngine:
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_term.__name__)
 
-    def compile_expression_list(self):
+    def compile_expression_list(self, root):
         '''
         compiles a (possibly empty) commaseparated list of expressions.
         '''

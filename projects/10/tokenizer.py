@@ -133,6 +133,13 @@ class JackTokenizer:
         self.current_token = self.tokens[self.next_token]
         self.next_token += 1
 
+    def peek(self):
+        '''
+        looks ahead at the next token.
+        Useful for disambiguating an identifier term from variable, array entry, or subroutine call
+        '''
+        return self.tokens[self.next_token]
+
     def token_type(self):
         '''
         returns the type of the current token
