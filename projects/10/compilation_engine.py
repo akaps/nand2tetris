@@ -104,16 +104,19 @@ class CompilationEngine:
         '''
         compiles a complete method, function, or constructor.
         '''
-        subroutine_root = ET.SubElement(self.root, SUBROUTINE_DEC)
-        self.add_terminal(subroutine_root, self.stream.keyword())
-        self.add_terminal(subroutine_root, self.stream.keyword())
-        self.add_terminal(subroutine_root, self.stream.identifier())
+        subroutine_dec = ET.SubElement(self.root, SUBROUTINE_DEC)
+        self.add_terminal(subroutine_dec, self.stream.keyword())
+        if self.stream.token_type() == tokenizer.KEYWORD:
+            self.add_terminal(subroutine_dec, self.stream.keyword())
+        else:
+            self.add_terminal(subroutine_dec, self.stream.identifier())
+        self.add_terminal(subroutine_dec, self.stream.identifier())
 
-        self.add_terminal(subroutine_root, self.stream.symbol())
-        self.compile_parameter_list(subroutine_root)
-        self.add_terminal(subroutine_root, self.stream.symbol())
+        self.add_terminal(subroutine_dec, self.stream.symbol())
+        self.compile_parameter_list(subroutine_dec)
+        self.add_terminal(subroutine_dec, self.stream.symbol())
 
-        subroutine_body = ET.SubElement(subroutine_root, SUBROUTINE_BODY)
+        subroutine_body = ET.SubElement(subroutine_dec, SUBROUTINE_BODY)
         self.add_terminal(subroutine_body, self.stream.symbol())
         while self.stream.token_type() == tokenizer.KEYWORD and self.stream.keyword() == VAR:
             self.compile_var_dec(subroutine_body)
@@ -130,6 +133,7 @@ class CompilationEngine:
             self.add_terminal(parameter_list_root, self.stream.identifier())
 
         while self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() == COMMA:
+            self.add_terminal(parameter_list_root, self.stream.symbol())
             self.add_terminal(parameter_list_root, self.stream.keyword())
             self.add_terminal(parameter_list_root, self.stream.identifier())
 
@@ -270,6 +274,8 @@ class CompilationEngine:
 
         elif token_type == tokenizer.SYMBOL and self.stream.symbol() in UNARY_OPS:
             self.add_terminal(term_root, self.stream.symbol())
+        elif token_type == tokenizer.KEYWORD and self.stream.keyword() in KEYWORD_CONSTANTS:
+            self.add_terminal(term_root, self.stream.keyword())
         else:
             assert False, 'unsupported token {token}'.format(token=self.stream.current_token)
 
