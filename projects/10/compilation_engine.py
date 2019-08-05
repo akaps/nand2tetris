@@ -200,7 +200,11 @@ class CompilationEngine:
         '''
         compiles a return statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_return.__name__)
+        return_root = ET.SubElement(root, RETURN)
+        self.add_terminal(return_root, self.stream.keyword())
+        if self.stream.token_type() != tokenizer.SYMBOL:
+            self.compile_expression(return_root)
+        self.add_terminal(return_root, self.stream.symbol())
 
     def compile_if(self, root):
         '''
