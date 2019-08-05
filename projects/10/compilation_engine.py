@@ -94,7 +94,7 @@ class CompilationEngine:
         self.add_terminal(class_var_root, self.stream.keyword())
         self.add_terminal(class_var_root, self.stream.identifier())
 
-        while self.stream.token_type() == tokenizer.KEYWORD and self.stream.symbol() == COMMA:
+        while self.stream.symbol() == COMMA:
             self.add_terminal(class_var_root, self.stream.symbol())
             self.add_terminal(class_var_root, self.stream.identifier)
 
@@ -145,6 +145,11 @@ class CompilationEngine:
         else:
             self.add_terminal(var_dec_root, self.stream.keyword())
         self.add_terminal(var_dec_root, self.stream.identifier())
+
+        while self.stream.symbol() == COMMA:
+            self.add_terminal(var_dec_root, self.stream.symbol())
+            self.add_terminal(var_dec_root, self.stream.identifier)
+
         self.add_terminal(var_dec_root, self.stream.symbol())
 
     def compile_statements(self, root):
