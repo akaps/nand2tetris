@@ -1,3 +1,5 @@
+import xml.etree.ElementTree as ET
+
 '''
 This module effects the actual compilation into XML form. It gets its input from a JackTokenizer and
 writes its parsed XML structure into an output file/stream. This is done by a series of compilexxx()
@@ -13,78 +15,79 @@ class CompilationEngine:
         creates a new compilation engine with the given input and output.
         The next method called must be compileClass().
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.__init__.__name__)
 
     def compile_class(self):
         '''
         compiles a complete class
         '''
+        assert False, 'unimplemented method {name}'.format(name=self.compile_class.__name__)
 
     def compile_class_var_dec(self):
         '''
         compiles a static declaration or a field declaration.
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_class_var_dec.__name__)
 
     def compile_subroutine(self):
         '''
         compiles a complete method, function, or constructor.
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_subroutine.__name__)
 
     def compile_parameter_list(self):
         '''
         compiles a (possibly empty) parameter list, not including the enclosing “()”.
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_parameter_list.__name__)
 
     def compile_var_dec(self):
         '''
         compiles a var declaration
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_var_dec.__name__)
 
     def compile_statements(self):
         '''
         compiles a sequence of statements, not including the enclosing “{}”.
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_statements.__name__)
 
     def compile_do(self):
         '''
         compiles a do statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_do.__name__)
 
     def compile_let(self):
         '''
         compiles a let statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_let.__name__)
 
     def compile_while(self):
         '''
         compiles a while statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_while.__name__)
 
     def compile_return(self):
         '''
         compiles a return statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_return.__name__)
 
     def compile_if(self):
         '''
         compiles an if statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_if.__name__)
 
     def compile_expression(self):
         '''
         compiles an expression
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_expression.__name__)
 
     def compile_term(self):
         '''
@@ -96,10 +99,10 @@ class CompilationEngine:
         distinguish between the three possibilities. Any other token is not
         part of this term and should not be advanced over.
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_term.__name__)
 
     def compile_expression_list(self):
         '''
         compiles a (possibly empty) commaseparated list of expressions.
         '''
-        assert False, 'unimplemented method {name}'.format(name=__name__)
+        assert False, 'unimplemented method {name}'.format(name=self.compile_expression_list.__name__)
