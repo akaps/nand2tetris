@@ -1,3 +1,79 @@
+from enum import Enum
+
+SINGLE_COMMENT = '//'
+MULTI_COMMENT = '/*'
+END_COMMENT = '*/'
+DOUBLE_QUOTES = '"'
+
+KEYWORDS = [
+    'class',
+    'constructor',
+    'function',
+    'method',
+    'field',
+    'static',
+    'var',
+    'int',
+    'char',
+    'boolean',
+    'void',
+    'true',
+    'false',
+    'null',
+    'this',
+    'let',
+    'do',
+    'if',
+    'else',
+    'while',
+    'return'
+]
+
+SYMBOLS = [
+    '{', '}',
+    '(', ')',
+    '[', ']',
+    '.',
+    ',',
+    ';',
+    '+',
+    '-',
+    '*',
+    '/',
+    '&',
+    '|',
+    '<',
+    '>',
+    '=',
+    '~'
+]
+
+class TokenType(Enum):
+    KEYWORD = 0,
+    SYMBOL = 1,
+    IDENTIFIER = 2,
+    INT_CONST = 3,
+    STRING_CONST = 4
+
+def _remove_multiline_comments(text, start_comment, end_comment):
+    result = ''
+    if start_comment in text:
+        index = text.index(start_comment)
+        result += text[:index]
+        text = text[index+len(start_comment):]
+        text = _remove_multiline_comments(text, start_comment, end_comment)
+        index = text.index(end_comment)
+        result += text[index + len(end_comment):]
+    else:
+        result = text
+    return result
+
+def remove_multiline_comments(lines):
+    text = '\n'.join(lines)
+    while MULTI_COMMENT in text:
+        text = _remove_multiline_comments(text, MULTI_COMMENT, END_COMMENT)
+    return text.strip().splitlines()
+
 '''
 The tokenizer removes all comments and white space from the input stream and breaks it into
 Jack language tokens, as specified in the Jack grammar.
@@ -7,33 +83,58 @@ class JackTokenizer:
         '''
         Opens the input file/stream and gets ready to tokenize it
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.__init__.__name__)
+        self.lines = self.preprocess_file(file_name)
+        self.current_line = None
+        self.next_line = 0
+
+    def preprocess_file(self, file_name):
+        file = open(file_name, 'r')
+        result = []
+        for line in file.readlines():
+            line = line.strip()
+            if SINGLE_COMMENT in line:
+                comment_index = line.index(SINGLE_COMMENT)
+                line = line[:comment_index].strip()
+            if line:
+                result.append(line)
+        file.close()
+        result = remove_multiline_comments(result)
+        return result
 
     def has_more_tokens(self):
         '''
         do we have more tokens in the input?
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.has_more_tokens.__name__)
+        return self.next_line < len(self.lines)
 
     def advance(self):
         '''
         gets the next token from the input and makes it the current token. This method
         should only be called if hasMoreTokens() is true. Initially there is no current token..
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.advance.__name__)
+        self.current_line = self.lines[self.next_line].split()
+        self.next_line += 1
 
     def token_type(self):
         '''
         returns the type of the current token
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.token_type.__name__)
+        if self.current_line[0] in KEYWORDS:
+            return TokenType.KEYWORD
+        elif self.current_line[0] in SYMBOLS:
+            return TokenType.SYMBOL
+        elif self.current_line[0].isdigit():
+            return TokenType.INT_CONST
+        elif DOUBLE_QUOTES in self.current_line[0]:
+            return TokenType.STRING_CONST
+        return TokenType.IDENTIFIER
 
-    def key_word(self):
+    def keyword(self):
         '''
         returns the keyword which is the current token.
         Should be called only when tokenType() is KEYWORD.
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.key_word.__name__)
+        return self.current_line[0]
 
     def symbol(self):
         '''
