@@ -133,6 +133,7 @@ class JackTokenizer:
         returns the keyword which is the current token.
         Should be called only when tokenType() is KEYWORD.
         '''
+        assert self.token_type() == KEYWORD, 'invalid call to {name}, token is {type}'.format(name=self.keyword.__name__, type=self.token_type())
         return self.current_token
 
     def symbol(self):
@@ -140,6 +141,7 @@ class JackTokenizer:
         returns the character which is the current token.
         Should be called only when tokenType() is SYMBOL.
         '''
+        assert self.token_type() == SYMBOL, 'invalid call to {name}, token is {type}'.format(name=self.symbol.__name__, type=self.token_type())
         return self.current_token
 
     def identifier(self):
@@ -147,6 +149,7 @@ class JackTokenizer:
         returns the identifier which is the current token.
         Should be called only when tokenType() is IDENTIFIER
         '''
+        assert self.token_type() == IDENTIFIER, 'invalid call to {name}, token is {type}'.format(name=self.identifier.__name__, type=self.token_type())
         assert False, 'unimplemented method {name}'.format(name=self.identifier.__name__)
 
     def int_val(self):
@@ -154,6 +157,7 @@ class JackTokenizer:
         returns the integer value of the current token.
         Should be called only when tokenType() is INT_CONST
         '''
+        assert self.token_type() == INT_CONST, 'invalid call to {name}, token is {type}'.format(name=self.int_val.__name__, type=self.token_type())
         assert False, 'unimplemented method {name}'.format(name=self.int_val.__name__)
 
     def string_val(self):
@@ -161,4 +165,5 @@ class JackTokenizer:
         returns the string value of the current token, without the double quotes.
         Should be called only when tokenType() is STRING_CONST.
         '''
+        assert self.token_type() == STRING_CONST, 'invalid call to {name}, token is {type}'.format(name=self.string_val.__name__, type=self.token_type())
         assert False, 'unimplemented method {name}'.format(name=self.string_val.__name__)
