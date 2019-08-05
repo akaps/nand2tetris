@@ -116,11 +116,9 @@ class CompilationEngine:
 
         subroutine_body = ET.SubElement(subroutine_root, SUBROUTINE_BODY)
         self.add_terminal(subroutine_body, self.stream.symbol())
-        while self.stream.token_type() == tokenizer.KEYWORD:
-            if self.stream.keyword() == VAR:
-                self.compile_var_dec(subroutine_body)
-            else:
-                self.compile_statements(subroutine_body)
+        while self.stream.token_type() == tokenizer.KEYWORD and self.stream.keyword() == VAR:
+            self.compile_var_dec(subroutine_body)
+        self.compile_statements(subroutine_body)
         self.add_terminal(subroutine_root, self.stream.symbol())
 
     def compile_parameter_list(self, root):
@@ -154,18 +152,20 @@ class CompilationEngine:
         compiles a sequence of statements, not including the enclosing “{}”.
         '''
         statements_root = ET.SubElement(root, STATEMENTS)
-        if self.stream.keyword() == 'let':
-            self.compile_let(statements_root)
-        if self.stream.keyword() == 'if':
-            self.compile_if(statements_root)
-        if self.stream.keyword() == 'while':
-            self.compile_while(statements_root)
-        if self.stream.keyword() == 'do':
-            self.compile_do(statements_root)
-        if self.stream.keyword() == 'return':
-            self.compile_return(statements_root)
-        else:
-            assert False, 'unsupported keyword {keyword}'.format(keyword=self.stream.keyword())
+        while self.stream.token_type() == tokenizer.KEYWORD:
+            keyword = self.stream.keyword()
+            if keyword == 'let':
+                self.compile_let(statements_root)
+            elif keyword == 'if':
+                self.compile_if(statements_root)
+            elif keyword == 'while':
+                self.compile_while(statements_root)
+            elif keyword == 'do':
+                self.compile_do(statements_root)
+            elif keyword == 'return':
+                self.compile_return(statements_root)
+            else:
+                assert False, 'unsupported keyword {keyword}'.format(keyword=keyword)
 
     def compile_do(self, root):
         '''
@@ -184,10 +184,9 @@ class CompilationEngine:
             self.add_terminal(let_root, self.stream.symbol())
             self.compile_expression(let_root)
             self.add_terminal(let_root, self.stream.symbol())
-
         self.add_terminal(let_root, self.stream.symbol())
-
         self.compile_expression(let_root)
+        self.add_terminal(let_root, self.stream.symbol())
 
     def compile_while(self, root):
         '''
@@ -228,30 +227,35 @@ class CompilationEngine:
         part of this term and should not be advanced over.
         '''
         term_root = ET.SubElement(root, TERM)
-        if self.stream.token_type() == tokenizer.INT:
+        token_type = self.stream.token_type()
+        if token_type == tokenizer.INT:
             self.add_terminal(term_root, self.stream.int_val())
-        if self.stream.token_type() == tokenizer.STRING:
+        elif token_type == tokenizer.STRING:
             self.add_terminal(term_root, self.stream.string_val())
-        if self.stream.token_type() == KEYWORD_CONSTANTS:
+        elif token_type == KEYWORD_CONSTANTS:
             self.add_terminal(term_root, self.stream.keyword())
-        if self.stream.token_type() == tokenizer.IDENTIFIER:
+        elif token_type == tokenizer.IDENTIFIER:
             if self.stream.peek() == OPEN_BRACKET:
                 self.add_terminal(term_root, self.stream.identifier())
                 self.add_terminal(term_root, self.stream.symbol())
                 self.compile_expression(term_root)
                 self.add_terminal(term_root, self.stream.symbol())
-            if self.stream.peek() == OPEN_PAREN:
+            elif self.stream.peek() == OPEN_PAREN:
                 self.compile_expression(term_root)
-            if self.stream.peek() == PERIOD:
+            elif self.stream.peek() == PERIOD:
                 self.add_terminal(term_root, self.stream.identifier())
                 if self.stream.symbol() == PERIOD:
                     self.add_terminal(term_root, self.stream.identifier())
                 self.add_terminal(term_root, self.stream.symbol())
                 self.compile_expression_list(term_root)
                 self.add_terminal(term_root, self.stream.symbol())
+            else:
+                self.add_terminal(term_root, self.stream.identifier())
 
-        if self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() in UNARY_OPS:
+        elif token_type == tokenizer.SYMBOL and self.stream.symbol() in UNARY_OPS:
             self.add_terminal(term_root, self.stream.symbol())
+        else:
+            assert False, 'unsupported token {token}'.format(keyword=self.stream.current_token)
 
     def compile_expression_list(self, root):
         '''
@@ -260,5 +264,8 @@ class CompilationEngine:
         assert False, 'unimplemented method {name}'.format(name=self.compile_expression_list.__name__)
 
     def write(self):
-        xmlstr = minidom.parseString(ET.tostring(self.root)).toprettyxml(indent='    ')
+        self._write(self.root)
+
+    def _write(self, root):
+        xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent='    ')
         print(xmlstr)
