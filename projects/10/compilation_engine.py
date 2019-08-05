@@ -1,4 +1,11 @@
+from xml.dom import minidom
 import xml.etree.ElementTree as ET
+
+CLASS_VAR_DEC = 'classVarDec'
+CLASS_VARS = ['static', 'field']
+
+SUBROUTINE_DEC = 'subroutineDec'
+SUBROUTINES = ['constructor', 'function', 'method']
 
 '''
 This module effects the actual compilation into XML form. It gets its input from a JackTokenizer and
@@ -10,18 +17,45 @@ compilexxx()may only be called if indeed xxx is the next syntactic element of th
 In the next chapter, this module will be modified to output the compiled code rather than XML.
 '''
 class CompilationEngine:
-    def __init__(self, in_file, out_file):
+    def __init__(self, tokenizer, out_file):
         '''
         creates a new compilation engine with the given input and output.
         The next method called must be compileClass().
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.__init__.__name__)
+        self.tokenizer = tokenizer
+        self.out_file = out_file
+        self.root = ET.Element('class')
+
+        self.tokenizer.advance()
+        assert self.tokenizer.token_type() == 'keyword'
+        assert self.tokenizer.keyword() == 'class'
+        self.compile_class()
+
+    def add_terminal(self, root, tag, text):
+        terminal = ET.SubElement(root, tag)
+        terminal.text = text
 
     def compile_class(self):
         '''
         compiles a complete class
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_class.__name__)
+        self.add_terminal(self.root, self.tokenizer.token_type(), self.tokenizer.keyword())
+        self.tokenizer.advance()
+        self.add_terminal(self.root, self.tokenizer.token_type(), self.tokenizer.keyword())
+        self.tokenizer.advance()
+        self.add_terminal(self.root, self.tokenizer.token_type(), self.tokenizer.symbol())
+        self.tokenizer.advance()
+
+        while self.tokenizer.token_type() == 'keyword' and self.tokenizer.keyword() in CLASS_VARS:
+            self.compile_class_var_dec()
+
+        self.write()
+
+        self.tokenizer.advance()
+        while self.tokenizer.token_type() == 'keyword' and self.tokenizer.keyword() in SUBROUTINES:
+            self.compile_subroutine()
+
+        self.add_terminal(self.root, self.tokenizer.token_type, self.tokenizer.symbol())
 
     def compile_class_var_dec(self):
         '''
@@ -106,3 +140,7 @@ class CompilationEngine:
         compiles a (possibly empty) commaseparated list of expressions.
         '''
         assert False, 'unimplemented method {name}'.format(name=self.compile_expression_list.__name__)
+
+    def write(self):
+        xmlstr = minidom.parseString(ET.tostring(self.root)).toprettyxml(indent='    ')
+        print(xmlstr)
