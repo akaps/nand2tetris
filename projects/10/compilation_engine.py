@@ -29,7 +29,6 @@ RETURN = 'returnStatement'
 #expression constants
 EXPRESSION = 'expression'
 TERM = 'term'
-SUBROUTINE_CALL = 'subroutineCall'
 EXPRESSION_LIST = 'expressionList'
 OPS = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
 UNARY_OPS = ['-', '~']
@@ -111,8 +110,7 @@ class CompilationEngine:
         self.add_terminal(subroutine_root, self.stream.identifier())
 
         self.add_terminal(subroutine_root, self.stream.symbol())
-        parameter_list = ET.SubElement(subroutine_root, PARAMETER_LIST)
-        self.compile_parameter_list(parameter_list)
+        self.compile_parameter_list(subroutine_root)
         self.add_terminal(subroutine_root, self.stream.symbol())
 
         subroutine_body = ET.SubElement(subroutine_root, SUBROUTINE_BODY)
@@ -120,7 +118,7 @@ class CompilationEngine:
         while self.stream.token_type() == tokenizer.KEYWORD and self.stream.keyword() == VAR:
             self.compile_var_dec(subroutine_body)
         self.compile_statements(subroutine_body)
-        self.add_terminal(subroutine_root, self.stream.symbol())
+        self.add_terminal(subroutine_body, self.stream.symbol())
 
     def compile_parameter_list(self, root):
         '''
@@ -180,7 +178,7 @@ class CompilationEngine:
         do_root = ET.SubElement(root, DO)
         self.add_terminal(do_root, self.stream.keyword())
         self.compile_subroutine_call(do_root)
-        #self.add_terminal(do_root, self.stream.symbol())
+        self.add_terminal(do_root, self.stream.symbol())
 
     def compile_let(self, root):
         '''
@@ -287,14 +285,13 @@ class CompilationEngine:
                 self.compile_expression(expression_list_root)
 
     def compile_subroutine_call(self, root):
-        subroutine_call_root = ET.SubElement(root, SUBROUTINE_CALL)
-        self.add_terminal(subroutine_call_root, self.stream.identifier())
-        if self.stream.symbol == PERIOD:
-            self.add_terminal(subroutine_call_root, self.stream.symbol)
-            self.add_terminal(subroutine_call_root, self.stream.identifier())
-        self.add_terminal(subroutine_call_root, self.stream.symbol())
-        self.compile_expression_list(subroutine_call_root)
-        self.add_terminal(subroutine_call_root, self.stream.symbol())
+        self.add_terminal(root, self.stream.identifier())
+        if self.stream.symbol() == PERIOD:
+            self.add_terminal(root, self.stream.symbol())
+            self.add_terminal(root, self.stream.identifier())
+        self.add_terminal(root, self.stream.symbol())
+        self.compile_expression_list(root)
+        self.add_terminal(root, self.stream.symbol())
 
     def write(self):
         lines = self._write(self.root).split('\n')
@@ -304,4 +301,4 @@ class CompilationEngine:
         file.close()
 
     def _write(self, root):
-        return minidom.parseString(ET.tostring(root)).toprettyxml(indent='    ')
+        return minidom.parseString(ET.tostring(root)).toprettyxml()
