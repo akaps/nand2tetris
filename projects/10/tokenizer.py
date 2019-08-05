@@ -5,11 +5,11 @@ MULTI_COMMENT = '/*'
 END_COMMENT = '*/'
 DOUBLE_QUOTES = '"'
 
-KEYWORD = 'keyword'
-SYMBOL = 'symbol'
-IDENTIFIER = 'identifier'
-INT_CONST = 'integerConstant'
-STRING_CONST = 'stringConstant'
+KEYWORD_TYPE = 'keyword'
+SYMBOL_TYPE = 'symbol'
+IDENTIFIER_TYPE = 'identifier'
+INT_CONST_TYPE = 'integerConstant'
+STRING_CONST_TYPE = 'stringConstant'
 
 KEYWORDS = [
     'class',
@@ -71,7 +71,25 @@ def remove_multiline_comments(lines):
     text = '\n'.join(lines)
     while MULTI_COMMENT in text:
         text = _remove_multiline_comments(text, MULTI_COMMENT, END_COMMENT)
-    return text.strip().split()
+    return text.strip()
+
+def tokenize(lines):
+    print(lines)
+    return lines.split()
+
+def preprocess_file(file_name):
+    file = open(file_name, 'r')
+    result = []
+    for line in file.readlines():
+        line = line.strip()
+        if SINGLE_COMMENT in line:
+            comment_index = line.index(SINGLE_COMMENT)
+            line = line[:comment_index].strip()
+        if line:
+            result.append(line)
+    file.close()
+    lines = remove_multiline_comments(result)
+    return tokenize(lines)
 
 '''
 The tokenizer removes all comments and white space from the input stream and breaks it into
@@ -82,23 +100,9 @@ class JackTokenizer:
         '''
         Opens the input file/stream and gets ready to tokenize it
         '''
-        self.tokens = self.preprocess_file(file_name)
+        self.tokens = preprocess_file(file_name)
         self.current_token = None
         self.next_token = 0
-
-    def preprocess_file(self, file_name):
-        file = open(file_name, 'r')
-        result = []
-        for line in file.readlines():
-            line = line.strip()
-            if SINGLE_COMMENT in line:
-                comment_index = line.index(SINGLE_COMMENT)
-                line = line[:comment_index].strip()
-            if line:
-                result.append(line)
-        file.close()
-        result = remove_multiline_comments(result)
-        return result
 
     def has_more_tokens(self):
         '''
@@ -119,17 +123,17 @@ class JackTokenizer:
         returns the type of the current token
         '''
         if self.current_token in KEYWORDS:
-            return KEYWORD
+            return KEYWORD_TYPE
         elif self.current_token in SYMBOLS:
-            return SYMBOL
+            return SYMBOL_TYPE
         elif self.current_token.isdigit():
-            return INT_CONST
+            return INT_CONST_TYPE
         elif DOUBLE_QUOTES in self.current_token:
-            return STRING_CONST
-        return IDENTIFIER
+            return STRING_CONST_TYPE
+        return IDENTIFIER_TYPE
 
     def check_type_match(self, token_type):
-        assert self.token_type() == token_type, 'invalid call to {token_type}, token "{token}" is {type}'.format(
+        assert self.token_type() == token_type, 'invalid call to "{token_type}", token "{token}" is {type}'.format(
             token_type=token_type,
             type=self.token_type(),
             token=self.current_token)
@@ -139,7 +143,7 @@ class JackTokenizer:
         returns the keyword which is the current token.
         Should be called only when tokenType() is KEYWORD.
         '''
-        self.check_type_match(KEYWORD)
+        self.check_type_match(KEYWORD_TYPE)
         return self.current_token
 
     def symbol(self):
@@ -147,7 +151,7 @@ class JackTokenizer:
         returns the character which is the current token.
         Should be called only when tokenType() is SYMBOL.
         '''
-        self.check_type_match(SYMBOL)
+        self.check_type_match(SYMBOL_TYPE)
         return self.current_token
 
     def identifier(self):
@@ -155,7 +159,7 @@ class JackTokenizer:
         returns the identifier which is the current token.
         Should be called only when tokenType() is IDENTIFIER
         '''
-        self.check_type_match(IDENTIFIER)
+        self.check_type_match(IDENTIFIER_TYPE)
         return self.current_token
 
     def int_val(self):
@@ -163,7 +167,7 @@ class JackTokenizer:
         returns the integer value of the current token.
         Should be called only when tokenType() is INT_CONST
         '''
-        self.check_type_match(INT_CONST)
+        self.check_type_match(INT_CONST_TYPE)
         assert False, 'unimplemented method {name}'.format(name=self.int_val.__name__)
 
     def string_val(self):
@@ -171,5 +175,5 @@ class JackTokenizer:
         returns the string value of the current token, without the double quotes.
         Should be called only when tokenType() is STRING_CONST.
         '''
-        self.check_type_match(STRING_CONST)
+        self.check_type_match(STRING_CONST_TYPE)
         assert False, 'unimplemented method {name}'.format(name=self.string_val.__name__)
