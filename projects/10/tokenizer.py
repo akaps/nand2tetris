@@ -118,7 +118,6 @@ class JackTokenizer:
         '''
         returns the type of the current token
         '''
-        print(self.current_token)
         if self.current_token in KEYWORDS:
             return KEYWORD
         elif self.current_token in SYMBOLS:
@@ -141,7 +140,7 @@ class JackTokenizer:
         returns the character which is the current token.
         Should be called only when tokenType() is SYMBOL.
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.symbol.__name__)
+        return self.current_token
 
     def identifier(self):
         '''
