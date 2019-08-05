@@ -27,40 +27,47 @@ class CompilationEngine:
         self.root = ET.Element('class')
 
         self.tokenizer.advance()
-        assert self.tokenizer.token_type() == 'keyword'
         assert self.tokenizer.keyword() == 'class'
         self.compile_class()
 
-    def add_terminal(self, root, tag, text):
-        terminal = ET.SubElement(root, tag)
+    def add_terminal(self, root, text):
+        terminal = ET.SubElement(root, self.tokenizer.token_type())
         terminal.text = text
+        self.tokenizer.advance()
 
     def compile_class(self):
         '''
         compiles a complete class
         '''
-        self.add_terminal(self.root, self.tokenizer.token_type(), self.tokenizer.keyword())
-        self.tokenizer.advance()
-        self.add_terminal(self.root, self.tokenizer.token_type(), self.tokenizer.keyword())
-        self.tokenizer.advance()
-        self.add_terminal(self.root, self.tokenizer.token_type(), self.tokenizer.symbol())
-        self.tokenizer.advance()
+        self.add_terminal(self.root, self.tokenizer.keyword())
+        self.add_terminal(self.root, self.tokenizer.identifier())
+        self.add_terminal(self.root, self.tokenizer.symbol())
 
         while self.tokenizer.token_type() == 'keyword' and self.tokenizer.keyword() in CLASS_VARS:
             self.compile_class_var_dec()
 
         self.write()
 
-        self.tokenizer.advance()
         while self.tokenizer.token_type() == 'keyword' and self.tokenizer.keyword() in SUBROUTINES:
             self.compile_subroutine()
 
-        self.add_terminal(self.root, self.tokenizer.token_type, self.tokenizer.symbol())
+        self.add_terminal(self.root, self.tokenizer.symbol())
 
     def compile_class_var_dec(self):
         '''
         compiles a static declaration or a field declaration.
         '''
+        class_var_root = ET.SubElement(self.root, CLASS_VAR_DEC)
+        self.add_terminal(class_var_root, self.tokenizer.keyword())
+        self.add_terminal(class_var_root, self.tokenizer.keyword())
+        self.add_terminal(class_var_root, self.tokenizer.identifier())
+
+        while self.tokenizer.token_type() == 'symbol' and self.tokenizer.symbol() == ',':
+            self.add_terminal(class_var_root, self.tokenizer.symbol())
+            self.add_terminal(class_var_root, self.tokenizer.identifier)
+
+        self.add_terminal(class_var_root, self.tokenizer.symbol())
+
         assert False, 'unimplemented method {name}'.format(name=self.compile_class_var_dec.__name__)
 
     def compile_subroutine(self):
