@@ -1,5 +1,3 @@
-from enum import Enum
-
 SINGLE_COMMENT = '//'
 MULTI_COMMENT = '/*'
 END_COMMENT = '*/'
@@ -73,9 +71,27 @@ def remove_multiline_comments(lines):
         text = _remove_multiline_comments(text, MULTI_COMMENT, END_COMMENT)
     return text.strip()
 
+def _tokenize(token):
+    result = []
+    start = 0
+    #go char by char, do you find a symbol? split that shit up!
+    for i, char in enumerate(token):
+        if char in SYMBOLS:
+            result.append(token[start:i])
+            result.append(token[i])
+            start = i + 1
+    #the remainder is the last entry
+    result.append(token[start:])
+    return result
+
 def tokenize(lines):
-    print(lines)
-    return lines.split()
+    result = []
+    tokens = lines.split()
+    for token in tokens:
+        new_tokens = _tokenize(token)
+        result.extend(new_tokens)
+        print('before: {bef}\tafter: {aft}'.format(bef=token, aft=str([item for item in new_tokens if item])))
+    return [item for item in result if item]
 
 def preprocess_file(file_name):
     file = open(file_name, 'r')
