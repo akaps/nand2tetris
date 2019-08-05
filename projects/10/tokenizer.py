@@ -190,7 +190,7 @@ class JackTokenizer:
         Should be called only when tokenType() is INT_CONST
         '''
         self.check_type_match(INT)
-        assert False, 'unimplemented method {name}'.format(name=self.int_val.__name__)
+        return int(self.current_token)
 
     def string_val(self):
         '''
@@ -198,4 +198,4 @@ class JackTokenizer:
         Should be called only when tokenType() is STRING_CONST.
         '''
         self.check_type_match(STRING)
-        assert False, 'unimplemented method {name}'.format(name=self.string_val.__name__)
+        return self.current_token
