@@ -12,7 +12,8 @@ def analyze(file_name):
     print('analyzing {file}'.format(file=file_name))
     out_name = file_name.parent.joinpath(file_name.stem + XML)
     tokenizer = JackTokenizer(file_name)
-    engine = CompilationEngine(file_name, out_name)
+    engine = CompilationEngine(tokenizer, out_name)
+    engine.write()
     print('Successfully analyzed {file} to {output}'.format(files=file_name, output=out_name))
 
 def parse_args(args):
