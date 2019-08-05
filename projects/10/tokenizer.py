@@ -3,11 +3,11 @@ MULTI_COMMENT = '/*'
 END_COMMENT = '*/'
 DOUBLE_QUOTES = '"'
 
-KEYWORD_TYPE = 'keyword'
-SYMBOL_TYPE = 'symbol'
-IDENTIFIER_TYPE = 'identifier'
-INT_CONST_TYPE = 'integerConstant'
-STRING_CONST_TYPE = 'stringConstant'
+KEYWORD = 'keyword'
+SYMBOL = 'symbol'
+IDENTIFIER = 'identifier'
+INT = 'integerConstant'
+STRING = 'stringConstant'
 
 KEYWORDS = [
     'class',
@@ -145,14 +145,14 @@ class JackTokenizer:
         returns the type of the current token
         '''
         if self.current_token in KEYWORDS:
-            return KEYWORD_TYPE
+            return KEYWORD
         elif self.current_token in SYMBOLS:
-            return SYMBOL_TYPE
+            return SYMBOL
         elif self.current_token.isdigit():
-            return INT_CONST_TYPE
+            return INT
         elif DOUBLE_QUOTES in self.current_token:
-            return STRING_CONST_TYPE
-        return IDENTIFIER_TYPE
+            return STRING
+        return IDENTIFIER
 
     def check_type_match(self, token_type):
         assert self.token_type() == token_type, 'invalid call to "{token_type}", token "{token}" is {type}'.format(
@@ -165,7 +165,7 @@ class JackTokenizer:
         returns the keyword which is the current token.
         Should be called only when tokenType() is KEYWORD.
         '''
-        self.check_type_match(KEYWORD_TYPE)
+        self.check_type_match(KEYWORD)
         return self.current_token
 
     def symbol(self):
@@ -173,7 +173,7 @@ class JackTokenizer:
         returns the character which is the current token.
         Should be called only when tokenType() is SYMBOL.
         '''
-        self.check_type_match(SYMBOL_TYPE)
+        self.check_type_match(SYMBOL)
         return self.current_token
 
     def identifier(self):
@@ -181,7 +181,7 @@ class JackTokenizer:
         returns the identifier which is the current token.
         Should be called only when tokenType() is IDENTIFIER
         '''
-        self.check_type_match(IDENTIFIER_TYPE)
+        self.check_type_match(IDENTIFIER)
         return self.current_token
 
     def int_val(self):
@@ -189,7 +189,7 @@ class JackTokenizer:
         returns the integer value of the current token.
         Should be called only when tokenType() is INT_CONST
         '''
-        self.check_type_match(INT_CONST_TYPE)
+        self.check_type_match(INT)
         assert False, 'unimplemented method {name}'.format(name=self.int_val.__name__)
 
     def string_val(self):
@@ -197,5 +197,5 @@ class JackTokenizer:
         returns the string value of the current token, without the double quotes.
         Should be called only when tokenType() is STRING_CONST.
         '''
-        self.check_type_match(STRING_CONST_TYPE)
+        self.check_type_match(STRING)
         assert False, 'unimplemented method {name}'.format(name=self.string_val.__name__)
