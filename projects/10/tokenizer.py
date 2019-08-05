@@ -5,6 +5,12 @@ MULTI_COMMENT = '/*'
 END_COMMENT = '*/'
 DOUBLE_QUOTES = '"'
 
+KEYWORD = 'keyword'
+SYMBOL = 'symbol'
+IDENTIFIER = 'identifier'
+INT_CONST = 'integerConstant'
+STRING_CONST = 'stringConstant'
+
 KEYWORDS = [
     'class',
     'constructor',
@@ -48,13 +54,6 @@ SYMBOLS = [
     '~'
 ]
 
-class TokenType(Enum):
-    KEYWORD = 0,
-    SYMBOL = 1,
-    IDENTIFIER = 2,
-    INT_CONST = 3,
-    STRING_CONST = 4
-
 def _remove_multiline_comments(text, start_comment, end_comment):
     result = ''
     if start_comment in text:
@@ -72,7 +71,7 @@ def remove_multiline_comments(lines):
     text = '\n'.join(lines)
     while MULTI_COMMENT in text:
         text = _remove_multiline_comments(text, MULTI_COMMENT, END_COMMENT)
-    return text.strip().splitlines()
+    return text.strip().split()
 
 '''
 The tokenizer removes all comments and white space from the input stream and breaks it into
@@ -83,9 +82,9 @@ class JackTokenizer:
         '''
         Opens the input file/stream and gets ready to tokenize it
         '''
-        self.lines = self.preprocess_file(file_name)
-        self.current_line = None
-        self.next_line = 0
+        self.tokens = self.preprocess_file(file_name)
+        self.current_token = None
+        self.next_token = 0
 
     def preprocess_file(self, file_name):
         file = open(file_name, 'r')
@@ -105,36 +104,37 @@ class JackTokenizer:
         '''
         do we have more tokens in the input?
         '''
-        return self.next_line < len(self.lines)
+        return self.next_token < len(self.tokens)
 
     def advance(self):
         '''
         gets the next token from the input and makes it the current token. This method
         should only be called if hasMoreTokens() is true. Initially there is no current token..
         '''
-        self.current_line = self.lines[self.next_line].split()
-        self.next_line += 1
+        self.current_token = self.tokens[self.next_token]
+        self.next_token += 1
 
     def token_type(self):
         '''
         returns the type of the current token
         '''
-        if self.current_line[0] in KEYWORDS:
-            return TokenType.KEYWORD
-        elif self.current_line[0] in SYMBOLS:
-            return TokenType.SYMBOL
-        elif self.current_line[0].isdigit():
-            return TokenType.INT_CONST
-        elif DOUBLE_QUOTES in self.current_line[0]:
-            return TokenType.STRING_CONST
-        return TokenType.IDENTIFIER
+        print(self.current_token)
+        if self.current_token in KEYWORDS:
+            return KEYWORD
+        elif self.current_token in SYMBOLS:
+            return SYMBOL
+        elif self.current_token.isdigit():
+            return INT_CONST
+        elif DOUBLE_QUOTES in self.current_token:
+            return STRING_CONST
+        return IDENTIFIER
 
     def keyword(self):
         '''
         returns the keyword which is the current token.
         Should be called only when tokenType() is KEYWORD.
         '''
-        return self.current_line[0]
+        return self.current_token
 
     def symbol(self):
         '''
