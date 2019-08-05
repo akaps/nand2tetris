@@ -90,7 +90,6 @@ def tokenize(lines):
     for token in tokens:
         new_tokens = _tokenize(token)
         result.extend(new_tokens)
-        print('before: {bef}\tafter: {aft}'.format(bef=token, aft=str([item for item in new_tokens if item])))
     return [item for item in result if item]
 
 def preprocess_file(file_name):
