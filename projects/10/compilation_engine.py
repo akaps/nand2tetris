@@ -30,7 +30,7 @@ RETURN = 'returnStatement'
 EXPRESSION = 'expression'
 TERM = 'term'
 SUBROUTINE_CALL = 'subroutineCall'
-EXPRESSION_LISt = 'expressionList'
+EXPRESSION_LIST = 'expressionList'
 OPS = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
 UNARY_OPS = ['-', '~']
 KEYWORD_CONSTANTS = ['true', 'false', 'null', 'this']
@@ -171,7 +171,9 @@ class CompilationEngine:
         '''
         compiles a do statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_do.__name__)
+        do_root = ET.SubElement(root, DO)
+        self.add_terminal(do_root, self.stream.keyword())
+        self.compile_subroutine_call(do_root)
 
     def compile_let(self, root):
         '''
@@ -240,28 +242,36 @@ class CompilationEngine:
                 self.add_terminal(term_root, self.stream.symbol())
                 self.compile_expression(term_root)
                 self.add_terminal(term_root, self.stream.symbol())
-            elif self.stream.peek() == OPEN_PAREN:
-                self.compile_expression(term_root)
-            elif self.stream.peek() == PERIOD:
-                self.add_terminal(term_root, self.stream.identifier())
-                if self.stream.symbol() == PERIOD:
-                    self.add_terminal(term_root, self.stream.identifier())
-                self.add_terminal(term_root, self.stream.symbol())
-                self.compile_expression_list(term_root)
-                self.add_terminal(term_root, self.stream.symbol())
+            elif self.stream.peek() == OPEN_PAREN or self.stream.peek() == PERIOD:
+                self.compile_subroutine_call(term_root)
             else:
                 self.add_terminal(term_root, self.stream.identifier())
 
         elif token_type == tokenizer.SYMBOL and self.stream.symbol() in UNARY_OPS:
             self.add_terminal(term_root, self.stream.symbol())
         else:
-            assert False, 'unsupported token {token}'.format(keyword=self.stream.current_token)
+            assert False, 'unsupported token {token}'.format(token=self.stream.current_token)
 
     def compile_expression_list(self, root):
         '''
         compiles a (possibly empty) commaseparated list of expressions.
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_expression_list.__name__)
+        expression_list_root = ET.SubElement(root, EXPRESSION_LIST)
+        if self.stream.token_type() != tokenizer.SYMBOL:
+            self.compile_expression(expression_list_root)
+            while self.stream.symbol() == COMMA:
+                self.add_terminal(expression_list_root, self.stream.symbol())
+                self.compile_expression(expression_list_root)
+
+    def compile_subroutine_call(self, root):
+        subroutine_call_root = ET.SubElement(root, SUBROUTINE_CALL)
+        self.add_terminal(subroutine_call_root, self.stream.identifier())
+        if self.stream.symbol == PERIOD:
+            self.add_terminal(subroutine_call_root, self.stream.symbol)
+            self.add_terminal(subroutine_call_root, self.stream.identifier())
+        self.add_terminal(subroutine_call_root, self.stream.symbol())
+        self.compile_expression_list(subroutine_call_root)
+        self.add_terminal(subroutine_call_root, self.stream.symbol())
 
     def write(self):
         self._write(self.root)
