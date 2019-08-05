@@ -14,7 +14,7 @@ def analyze(file_name):
     tokenizer = JackTokenizer(file_name)
     engine = CompilationEngine(tokenizer, out_name)
     engine.write()
-    print('Successfully analyzed {file} to {output}'.format(files=file_name, output=out_name))
+    print('Successfully analyzed {file} to {output}'.format(file=file_name, output=out_name))
 
 def parse_args(args):
     usage = 'Analyzes given .jack files for file/directory into Jack via .xml grammar'

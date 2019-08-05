@@ -66,8 +66,9 @@ class CompilationEngine:
 
     def add_terminal(self, root, text):
         terminal = ET.SubElement(root, self.stream.token_type())
-        terminal.text = text
-        self.stream.advance()
+        terminal.text = ' {text} '.format(text=text)
+        if self.stream.has_more_tokens():
+            self.stream.advance()
 
     def compile_class(self):
         '''
@@ -96,7 +97,7 @@ class CompilationEngine:
 
         while self.stream.symbol() == COMMA:
             self.add_terminal(class_var_root, self.stream.symbol())
-            self.add_terminal(class_var_root, self.stream.identifier)
+            self.add_terminal(class_var_root, self.stream.identifier())
 
         self.add_terminal(class_var_root, self.stream.symbol())
 
@@ -148,7 +149,7 @@ class CompilationEngine:
 
         while self.stream.symbol() == COMMA:
             self.add_terminal(var_dec_root, self.stream.symbol())
-            self.add_terminal(var_dec_root, self.stream.identifier)
+            self.add_terminal(var_dec_root, self.stream.identifier())
 
         self.add_terminal(var_dec_root, self.stream.symbol())
 
@@ -179,6 +180,7 @@ class CompilationEngine:
         do_root = ET.SubElement(root, DO)
         self.add_terminal(do_root, self.stream.keyword())
         self.compile_subroutine_call(do_root)
+        #self.add_terminal(do_root, self.stream.symbol())
 
     def compile_let(self, root):
         '''
@@ -215,7 +217,19 @@ class CompilationEngine:
         '''
         compiles an if statement
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_if.__name__)
+        if_root = ET.SubElement(root, IF)
+        self.add_terminal(if_root, self.stream.keyword())
+        self.add_terminal(if_root, self.stream.symbol())
+        self.compile_expression(if_root)
+        self.add_terminal(if_root, self.stream.symbol())
+        self.add_terminal(if_root, self.stream.symbol())
+        self.compile_statements(if_root)
+        self.add_terminal(if_root, self.stream.symbol())
+        if self.stream.token_type() == tokenizer.KEYWORD and self.stream.keyword() == 'else':
+            self.add_terminal(if_root, self.stream.keyword())
+            self.add_terminal(if_root, self.stream.symbol())
+            self.compile_statements(if_root)
+            self.add_terminal(if_root, self.stream.symbol())
 
     def compile_expression(self, root):
         '''
@@ -283,8 +297,11 @@ class CompilationEngine:
         self.add_terminal(subroutine_call_root, self.stream.symbol())
 
     def write(self):
-        self._write(self.root)
+        lines = self._write(self.root).split('\n')
+        lines = lines[1:]
+        file = open(self.out_file, 'w')
+        file.write('\n'.join(lines))
+        file.close()
 
     def _write(self, root):
-        xmlstr = minidom.parseString(ET.tostring(root)).toprettyxml(indent='    ')
-        print(xmlstr)
+        return minidom.parseString(ET.tostring(root)).toprettyxml(indent='    ')
