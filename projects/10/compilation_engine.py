@@ -49,8 +49,6 @@ class CompilationEngine:
         while self.tokenizer.token_type() == 'keyword' and self.tokenizer.keyword() in CLASS_VARS:
             self.compile_class_var_dec()
 
-        self.write()
-
         while self.tokenizer.token_type() == 'keyword' and self.tokenizer.keyword() in SUBROUTINES:
             self.compile_subroutine()
 
@@ -88,7 +86,7 @@ class CompilationEngine:
         subroutine_body = ET.SubElement(subroutine_root, SUBROUTINE_BODY)
         self.add_terminal(subroutine_body, self.tokenizer.symbol())
         while self.tokenizer.token_type() == 'keyword':
-            if self.tokenizer.keyword() == 'identifier':
+            if self.tokenizer.keyword() == 'var':
                 self.compile_var_dec(subroutine_body)
             else:
                 self.compile_statements(subroutine_body)
@@ -110,7 +108,13 @@ class CompilationEngine:
         '''
         compiles a var declaration
         '''
-        assert False, 'unimplemented method {name}'.format(name=self.compile_var_dec.__name__)
+        self.add_terminal(root, self.tokenizer.keyword())
+        if self.tokenizer.token_type() == 'identifier':
+            self.add_terminal(root, self.tokenizer.identifier())
+        else:
+            self.add_terminal(root, self.tokenizer.keyword())
+        self.add_terminal(root, self.tokenizer.identifier())
+        self.add_terminal(root, self.tokenizer.symbol())
 
     def compile_statements(self, root):
         '''
@@ -126,7 +130,8 @@ class CompilationEngine:
             self.compile_do(root)
         if self.tokenizer.keyword() == 'return':
             self.compile_return(root)
-        assert False, 'unimplemented method {name}'.format(name=self.compile_statements.__name__)
+        else:
+            assert False, 'unsupported keyword {keyword}'.format(keyword=self.tokenizer.keyword())
 
     def compile_do(self, root):
         '''
