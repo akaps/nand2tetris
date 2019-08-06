@@ -70,9 +70,6 @@ def tokenize(input):
         (MISMATCH,      r'.')
     ]
     token_regex = '|'.join('(?P<%s>%s)' % pair for pair in TOKEN_SPECIFICATION)
-    print(token_regex)
-    print(re.match(IDENTIFIER, 'a[i]'))
-    print(re.match(token_regex, 'a[i]'))
     result = []
     for match in re.finditer(token_regex, input):
         kind = match.lastgroup
