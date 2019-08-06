@@ -63,9 +63,10 @@ def tokenize(file_name):
             kind = KEYWORD
         elif kind == SKIP or kind == COMMENT:
             continue
+        elif kind == STRING:
+            value = value[1:-1]
         elif kind == MISMATCH:
             assert False, 'unexpected value {value}'.format(value=value)
-
         result.append(Token(kind, value))
     return result
 

@@ -38,6 +38,7 @@ KEYWORD_CONSTANTS = ['true', 'false', 'null', 'this']
 COMMA = ','
 OPEN_BRACKET = '['
 OPEN_PAREN = '('
+CLOSE_PAREN = ')'
 PERIOD = '.'
 
 '''
@@ -249,7 +250,7 @@ class CompilationEngine:
         '''
         expression_root = ET.SubElement(root, EXPRESSION)
         self.compile_term(expression_root)
-        while (self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() in OPS):
+        while self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() in OPS:
             self.add_terminal(expression_root, self.stream.symbol())
             self.compile_term(expression_root)
 
@@ -269,7 +270,7 @@ class CompilationEngine:
             self.add_terminal(term_root, self.stream.int_val())
         elif token_type == tokenizer.STRING:
             self.add_terminal(term_root, self.stream.string_val())
-        elif token_type == KEYWORD_CONSTANTS:
+        elif token_type == tokenizer.KEYWORD and self.stream.keyword() in KEYWORD_CONSTANTS:
             self.add_terminal(term_root, self.stream.keyword())
         elif token_type == tokenizer.IDENTIFIER:
             if self.stream.peek() == OPEN_BRACKET:
@@ -281,11 +282,13 @@ class CompilationEngine:
                 self.compile_subroutine_call(term_root)
             else:
                 self.add_terminal(term_root, self.stream.identifier())
-
+        elif token_type == tokenizer.SYMBOL and self.stream.symbol() == OPEN_PAREN:
+            self.add_terminal(term_root, self.stream.symbol())
+            self.compile_expression(term_root)
+            self.add_terminal(term_root, self.stream.symbol())
         elif token_type == tokenizer.SYMBOL and self.stream.symbol() in UNARY_OPS:
             self.add_terminal(term_root, self.stream.symbol())
-        elif token_type == tokenizer.KEYWORD and self.stream.keyword() in KEYWORD_CONSTANTS:
-            self.add_terminal(term_root, self.stream.keyword())
+            self.compile_term(term_root)
         else:
             assert False, 'unsupported token {token}'.format(token=self.stream.current_token)
 
@@ -294,11 +297,12 @@ class CompilationEngine:
         compiles a (possibly empty) commaseparated list of expressions.
         '''
         expression_list_root = ET.SubElement(root, EXPRESSION_LIST)
-        if self.stream.token_type() != tokenizer.SYMBOL:
+        if self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() == CLOSE_PAREN:
+            return
+        self.compile_expression(expression_list_root)
+        while self.stream.symbol() == COMMA:
+            self.add_terminal(expression_list_root, self.stream.symbol())
             self.compile_expression(expression_list_root)
-            while self.stream.symbol() == COMMA:
-                self.add_terminal(expression_list_root, self.stream.symbol())
-                self.compile_expression(expression_list_root)
 
     def compile_subroutine_call(self, root):
         self.add_terminal(root, self.stream.identifier())
