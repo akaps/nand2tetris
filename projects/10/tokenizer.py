@@ -1,3 +1,6 @@
+import collections
+import re
+
 SINGLE_COMMENT = '//'
 MULTI_COMMENT = '/*'
 END_COMMENT = '*/'
@@ -33,25 +36,6 @@ KEYWORDS = [
     'return'
 ]
 
-SYMBOLS = [
-    '{', '}',
-    '(', ')',
-    '[', ']',
-    '.',
-    ',',
-    ';',
-    '+',
-    '-',
-    '*',
-    '/',
-    '&',
-    '|',
-    '<',
-    '>',
-    '=',
-    '~'
-]
-
 def _remove_multiline_comments(text, start_comment, end_comment):
     result = ''
     if start_comment in text:
@@ -71,26 +55,39 @@ def remove_multiline_comments(lines):
         text = _remove_multiline_comments(text, MULTI_COMMENT, END_COMMENT)
     return text.strip()
 
-def _tokenize(token):
-    result = []
-    start = 0
-    #go char by char, do you find a symbol? split that shit up!
-    for i, char in enumerate(token):
-        if char in SYMBOLS:
-            result.append(token[start:i])
-            result.append(token[i])
-            start = i + 1
-    #the remainder is the last entry
-    result.append(token[start:])
-    return result
+Token = collections.namedtuple('Token', ['type', 'value'])
 
-def tokenize(lines):
+def tokenize(input):
+    MISMATCH = 'mismatch'
+    SKIP = 'skip'
+
+    TOKEN_SPECIFICATION = [
+        (INT,           r'\d+'),
+        (IDENTIFIER,    r'[_a-zA-Z][_a-zA-Z0-9]*'),
+        (STRING,        r'"\w+"'),
+        (SKIP,          r'[ \t\n]'),
+        (SYMBOL,       r'[\{\}\(\)\[\]\.\,\;\+\-\*\/\&\|\<\>\=\~\;]'),
+        (MISMATCH,      r'.')
+    ]
+    token_regex = '|'.join('(?P<%s>%s)' % pair for pair in TOKEN_SPECIFICATION)
+    print(token_regex)
+    print(re.match(IDENTIFIER, 'a[i]'))
+    print(re.match(token_regex, 'a[i]'))
     result = []
-    tokens = lines.split()
-    for token in tokens:
-        new_tokens = _tokenize(token)
-        result.extend(new_tokens)
-    return [item for item in result if item]
+    for match in re.finditer(token_regex, input):
+        kind = match.lastgroup
+        value = match.group()
+        if kind == INT:
+            value = int(value) in value
+        elif kind == IDENTIFIER and value in KEYWORDS:
+            kind = KEYWORD
+        elif kind == SKIP:
+            continue
+        elif kind == MISMATCH:
+            assert False, 'unexpected value {value}'.format(value=value)
+
+        result.append(Token(kind, value))
+    return result
 
 def preprocess_file(file_name):
     file = open(file_name, 'r')
@@ -103,8 +100,8 @@ def preprocess_file(file_name):
         if line:
             result.append(line)
     file.close()
-    lines = remove_multiline_comments(result)
-    return tokenize(lines)
+    text = remove_multiline_comments(result)
+    return tokenize(text)
 
 '''
 The tokenizer removes all comments and white space from the input stream and breaks it into
@@ -138,26 +135,17 @@ class JackTokenizer:
         looks ahead at the next token.
         Useful for disambiguating an identifier term from variable, array entry, or subroutine call
         '''
-        return self.tokens[self.next_token]
+        return self.tokens[self.next_token][1]
 
     def token_type(self):
         '''
         returns the type of the current token
         '''
-        if self.current_token in KEYWORDS:
-            return KEYWORD
-        elif self.current_token in SYMBOLS:
-            return SYMBOL
-        elif self.current_token.isdigit():
-            return INT
-        elif DOUBLE_QUOTES in self.current_token:
-            return STRING
-        return IDENTIFIER
+        return self.current_token[0]
 
     def check_type_match(self, token_type):
-        assert self.token_type() == token_type, 'invalid call to "{token_type}", token "{token}" is {type}'.format(
+        assert self.token_type() == token_type, 'invalid call to "{token_type}", token is "{token}"'.format(
             token_type=token_type,
-            type=self.token_type(),
             token=self.current_token)
 
     def keyword(self):
@@ -166,7 +154,7 @@ class JackTokenizer:
         Should be called only when tokenType() is KEYWORD.
         '''
         self.check_type_match(KEYWORD)
-        return self.current_token
+        return self.current_token[1]
 
     def symbol(self):
         '''
@@ -174,7 +162,7 @@ class JackTokenizer:
         Should be called only when tokenType() is SYMBOL.
         '''
         self.check_type_match(SYMBOL)
-        return self.current_token
+        return self.current_token[1]
 
     def identifier(self):
         '''
@@ -182,7 +170,7 @@ class JackTokenizer:
         Should be called only when tokenType() is IDENTIFIER
         '''
         self.check_type_match(IDENTIFIER)
-        return self.current_token
+        return self.current_token[1]
 
     def int_val(self):
         '''
@@ -190,7 +178,7 @@ class JackTokenizer:
         Should be called only when tokenType() is INT_CONST
         '''
         self.check_type_match(INT)
-        return int(self.current_token)
+        return self.current_token[1]
 
     def string_val(self):
         '''
@@ -198,4 +186,4 @@ class JackTokenizer:
         Should be called only when tokenType() is STRING_CONST.
         '''
         self.check_type_match(STRING)
-        return self.current_token
+        return self.current_token[1]
