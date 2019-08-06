@@ -1,11 +1,8 @@
 import collections
 import re
 
-SINGLE_COMMENT = '//'
-MULTI_COMMENT = '/*'
-END_COMMENT = '*/'
-DOUBLE_QUOTES = '"'
 
+COMMENT = 'comment'
 KEYWORD = 'keyword'
 SYMBOL = 'symbol'
 IDENTIFIER = 'identifier'
@@ -36,69 +33,41 @@ KEYWORDS = [
     'return'
 ]
 
-def _remove_multiline_comments(text, start_comment, end_comment):
-    result = ''
-    if start_comment in text:
-        index = text.index(start_comment)
-        result += text[:index]
-        text = text[index+len(start_comment):]
-        text = _remove_multiline_comments(text, start_comment, end_comment)
-        index = text.index(end_comment)
-        result += text[index + len(end_comment):]
-    else:
-        result = text
-    return result
-
-def remove_multiline_comments(lines):
-    text = '\n'.join(lines)
-    while MULTI_COMMENT in text:
-        text = _remove_multiline_comments(text, MULTI_COMMENT, END_COMMENT)
-    return text.strip()
-
 Token = collections.namedtuple('Token', ['type', 'value'])
 
-def tokenize(input):
+def tokenize(file_name):
     MISMATCH = 'mismatch'
     SKIP = 'skip'
 
+    file = open(file_name, 'r')
+    input = '\n'.join(file.readlines())
+    file.close()
+
     TOKEN_SPECIFICATION = [
+        (COMMENT,       r'(\/\/.*)|(\/\*(.|[\r\n])*?\*\/)'),
         (INT,           r'\d+'),
         (IDENTIFIER,    r'[_a-zA-Z][_a-zA-Z0-9]*'),
-        (STRING,        r'"\w+"'),
+        (STRING,        r'".+"'),
         (SKIP,          r'[ \t\n]'),
-        (SYMBOL,       r'[\{\}\(\)\[\]\.\,\;\+\-\*\/\&\|\<\>\=\~\;]'),
+        (SYMBOL,        r'[\{\}\(\)\[\]\.\+\*\-,;/&\|<>=~;]'),
         (MISMATCH,      r'.')
     ]
-    token_regex = '|'.join('(?P<%s>%s)' % pair for pair in TOKEN_SPECIFICATION)
+    token_regex = r'|'.join('(?P<%s>%s)' % pair for pair in TOKEN_SPECIFICATION)
     result = []
     for match in re.finditer(token_regex, input):
         kind = match.lastgroup
         value = match.group()
         if kind == INT:
-            value = int(value) in value
+            value = int(value)
         elif kind == IDENTIFIER and value in KEYWORDS:
             kind = KEYWORD
-        elif kind == SKIP:
+        elif kind == SKIP or kind == COMMENT:
             continue
         elif kind == MISMATCH:
             assert False, 'unexpected value {value}'.format(value=value)
 
         result.append(Token(kind, value))
     return result
-
-def preprocess_file(file_name):
-    file = open(file_name, 'r')
-    result = []
-    for line in file.readlines():
-        line = line.strip()
-        if SINGLE_COMMENT in line:
-            comment_index = line.index(SINGLE_COMMENT)
-            line = line[:comment_index].strip()
-        if line:
-            result.append(line)
-    file.close()
-    text = remove_multiline_comments(result)
-    return tokenize(text)
 
 '''
 The tokenizer removes all comments and white space from the input stream and breaks it into
@@ -109,7 +78,7 @@ class JackTokenizer:
         '''
         Opens the input file/stream and gets ready to tokenize it
         '''
-        self.tokens = preprocess_file(file_name)
+        self.tokens = tokenize(file_name)
         self.current_token = None
         self.next_token = 0
 
