@@ -1,3 +1,4 @@
 tools/
-*.out
 .vscode/
+*.out
+*.pyc
