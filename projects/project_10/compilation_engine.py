@@ -1,6 +1,6 @@
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
-import tokenizer
+import project_10.tokenizer as tokenizer
 
 #program structure constants
 CLASS = 'class'
