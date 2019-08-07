@@ -5,11 +5,17 @@ def UNFINISHED(method):
 Emits VM commands into a file
 '''
 class VMWriter:
+
     def __init__(self, out_file):
         '''
         Creates a new file and prepares it for writing VM commands
         '''
-        UNFINISHED(self.__init__)
+        self.file = open(out_file, 'w')
+        self.write_line('remove me when fully implemented')
+
+    def write_line(self, line):
+        self.file.write(line)
+        self.file.write('\n')
 
     def write_push(self, segment, index):
         '''
@@ -69,4 +75,4 @@ class VMWriter:
         '''
         Closes the output file
         '''
-        UNFINISHED(self.close)
+        self.file.close()

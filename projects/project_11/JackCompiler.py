@@ -11,16 +11,18 @@ VM = '.vm'
 
 class JackCompiler:
     def __init__(self, file_name):
-        self.out_name = file_name.parent.joinpath(file_name.stem + VM)
+        self.file_name = file_name
+        self.out_name = file_name.parent.joinpath(self.file_name.stem + VM)
         self.tokenizer = JackTokenizer(file_name)
         self.engine = CompilationEngine(self.tokenizer, self.out_name)
         self.table = SymbolTable()
-        self.writer = VMWriter(self.tokenizer, out_name)
+        self.writer = VMWriter(self.out_name)
 
-    def compile(self, file_name):
-        print('compiling {file}'.format(file=file_name))
+    def compile(self):
+        print('compiling {file}'.format(file=self.file_name))
         #TODO the work with all the pieces
-        print('Successfully compiled {file} to {output}'.format(file=file_name, output=out_name))
+        self.writer.close()
+        print('Successfully compiled {file} to {output}'.format(file=self.file_name, output=self.out_name))
 
 def parse_args(args):
     usage = 'Compiles given .jack files for file/directory into Jack VM'

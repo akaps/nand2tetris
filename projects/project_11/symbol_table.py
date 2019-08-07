@@ -1,5 +1,29 @@
+import collections
+
 def UNFINISHED(method):
     assert False, 'Unfinished method {name}'.format(name=method.__name__)
+
+CLASS = 'class'
+SUBROUTINE = 'subroutine'
+
+STATIC = 'static'
+FIELD = 'field'
+ARG = 'arg'
+VAR = 'var'
+
+SCOPE = {
+    STATIC : CLASS,
+    FIELD : CLASS,
+    ARG : SUBROUTINE,
+    VAR : SUBROUTINE
+}
+
+NAME = 'name'
+TYPE = 'type'
+KIND = 'kind'
+INDEX = 'index'
+
+Symbol = collections.namedtuple('Symbol', [NAME, TYPE, KIND, INDEX])
 
 '''
 A symbol table that associates names with information needed for Jack compilation: type, kind, and
@@ -10,7 +34,9 @@ class SymbolTable:
         '''
         Creates a new empty symbol table
         '''
-        UNFINISHED(self.__init__)
+        self.table = {}
+        self.table[CLASS] = {}
+        self.table[SUBROUTINE] = {}
 
     def start_subroutine(self):
         '''
