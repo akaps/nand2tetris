@@ -1,5 +1,4 @@
 tools/
 .vscode/
-projects/nand2tetris.egg-info
 *.out
 *.pyc
