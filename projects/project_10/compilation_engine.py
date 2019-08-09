@@ -51,18 +51,18 @@ compilexxx()may only be called if indeed xxx is the next syntactic element of th
 In the next chapter, this module will be modified to output the compiled code rather than XML.
 '''
 class CompilationEngine:
-    def __init__(self, stream, out_file):
+    def __init__(self, token_stream, out_file, xml_name):
         '''
         creates a new compilation engine with the given input and output.
         The next method called must be compileClass().
         '''
-        self.stream = stream
+        self.stream = token_stream
         self.out_file = out_file
+        self.xml_name = xml_name
         self.root = ET.Element('class')
 
         self.stream.advance()
         assert self.stream.keyword() == 'class'
-        self.compile_class()
 
     def add_terminal(self, root, text):
         terminal = ET.SubElement(root, self.stream.token_type())
@@ -314,11 +314,12 @@ class CompilationEngine:
         self.add_terminal(root, self.stream.symbol())
 
     def write(self):
-        lines = self._write(self.root).split('\n')
-        lines = lines[1:]
-        file = open(self.out_file, 'w')
-        file.write('\n'.join(lines))
-        file.close()
+        if self.xml_name:
+            lines = self._write(self.root).split('\n')
+            lines = lines[1:]
+            file = open(self.xml_name, 'w')
+            file.write('\n'.join(lines))
+            file.close()
 
     def _write(self, root):
         return minidom.parseString(ET.tostring(root)).toprettyxml()
