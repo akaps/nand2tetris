@@ -80,7 +80,8 @@ class CompilationEngine:
         compiles a complete class
         '''
         self.add_terminal(self.root, self.stream.keyword())
-        self.add_terminal(self.root, self.stream.identifier())
+        self.class_type = self.stream.identifier()
+        self.add_terminal(self.root, self.class_type)
         self.add_terminal(self.root, self.stream.symbol())
 
         while self.stream.token_type() == tokenizer.KEYWORD and self.stream.keyword() in CLASS_VARS:
@@ -96,16 +97,22 @@ class CompilationEngine:
         compiles a static declaration or a field declaration.
         '''
         class_var_root = ET.SubElement(self.root, CLASS_VAR_DEC)
-        self.add_terminal(class_var_root, self.stream.keyword())
+        kind = self.stream.keyword()
+        self.add_terminal(class_var_root, kind)
         if self.stream.token_type() == tokenizer.KEYWORD:
-            self.add_terminal(class_var_root, self.stream.keyword())
+            type_name = self.stream.keyword()
         else:
-            self.add_terminal(class_var_root, self.stream.identifier())
-        self.add_terminal(class_var_root, self.stream.identifier())
+            type_name = self.stream.identifier()
+        self.add_terminal(class_var_root, type_name)
+        name = self.stream.identifier()
+        self.add_terminal(class_var_root, name)
+        self.symbols.define(name, type_name, kind)
 
         while self.stream.symbol() == COMMA:
             self.add_terminal(class_var_root, self.stream.symbol())
-            self.add_terminal(class_var_root, self.stream.identifier())
+            name = self.stream.identifier()
+            self.add_terminal(class_var_root, name)
+            self.symbols.define(name, type_name, kind)
 
         self.add_terminal(class_var_root, self.stream.symbol())
 
@@ -114,7 +121,11 @@ class CompilationEngine:
         compiles a complete method, function, or constructor.
         '''
         subroutine_dec = ET.SubElement(self.root, SUBROUTINE_DEC)
-        self.add_terminal(subroutine_dec, self.stream.keyword())
+        self.symbols.start_subroutine()
+        subroutine_type = self.stream.keyword()
+        if subroutine_type in ['method', 'constructor']:
+            self.symbols.define('this', self.class_type, 'argument')
+        self.add_terminal(subroutine_dec, subroutine_type)
         if self.stream.token_type() == tokenizer.KEYWORD:
             self.add_terminal(subroutine_dec, self.stream.keyword())
         else:
@@ -138,13 +149,19 @@ class CompilationEngine:
         '''
         parameter_list_root = ET.SubElement(root, PARAMETER_LIST)
         if self.stream.token_type() != tokenizer.SYMBOL:
-            self.add_terminal(parameter_list_root, self.stream.keyword())
-            self.add_terminal(parameter_list_root, self.stream.identifier())
+            type_name = self.stream.keyword()
+            self.add_terminal(parameter_list_root, type_name)
+            name = self.stream.identifier()
+            self.add_terminal(parameter_list_root, name)
+            self.symbols.define(name, type_name, 'argument')
 
         while self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() == COMMA:
             self.add_terminal(parameter_list_root, self.stream.symbol())
-            self.add_terminal(parameter_list_root, self.stream.keyword())
-            self.add_terminal(parameter_list_root, self.stream.identifier())
+            type_name = self.stream.keyword()
+            self.add_terminal(parameter_list_root, type_name)
+            name = self.stream.identifier()
+            self.add_terminal(parameter_list_root, name)
+            self.symbols.define(name, type_name, 'argument')
 
     def compile_var_dec(self, root):
         '''
@@ -152,15 +169,21 @@ class CompilationEngine:
         '''
         var_dec_root = ET.SubElement(root, VAR_DEC)
         self.add_terminal(var_dec_root, self.stream.keyword())
+        type_name = None
         if self.stream.token_type() == tokenizer.IDENTIFIER:
-            self.add_terminal(var_dec_root, self.stream.identifier())
+            type_name = self.stream.identifier()
         else:
-            self.add_terminal(var_dec_root, self.stream.keyword())
-        self.add_terminal(var_dec_root, self.stream.identifier())
+            type_name = self.stream.keyword()
+        self.add_terminal(var_dec_root, type_name)
+        name = self.stream.identifier()
+        self.add_terminal(var_dec_root, name)
+        self.symbols.define(name, type_name, 'var')
 
         while self.stream.symbol() == COMMA:
             self.add_terminal(var_dec_root, self.stream.symbol())
-            self.add_terminal(var_dec_root, self.stream.identifier())
+            name = self.stream.identifier()
+            self.add_terminal(var_dec_root, name)
+            self.symbols.define(name, type_name, 'var')
 
         self.add_terminal(var_dec_root, self.stream.symbol())
 
