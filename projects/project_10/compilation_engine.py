@@ -1,6 +1,8 @@
 from xml.dom import minidom
 import xml.etree.ElementTree as ET
 import tokenizer
+from symbol_table import SymbolTable
+from vm_writer import VMWriter
 
 #program structure constants
 CLASS = 'class'
@@ -57,12 +59,15 @@ class CompilationEngine:
         The next method called must be compileClass().
         '''
         self.stream = token_stream
-        self.out_file = out_file
+        self.writer = VMWriter(out_file)
+        self.symbols = SymbolTable()
         self.xml_name = xml_name
         self.root = ET.Element('class')
 
         self.stream.advance()
         assert self.stream.keyword() == 'class'
+        #dummy line in output
+        self.writer.write_line('hello world')
 
     def add_terminal(self, root, text):
         terminal = ET.SubElement(root, self.stream.token_type())
@@ -320,6 +325,7 @@ class CompilationEngine:
             file = open(self.xml_name, 'w')
             file.write('\n'.join(lines))
             file.close()
+        self.writer.close()
 
     def _write(self, root):
         return minidom.parseString(ET.tostring(root)).toprettyxml()
