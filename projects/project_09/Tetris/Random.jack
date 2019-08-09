@@ -1,0 +1,36 @@
+/**
+A simplistic random number generator, provided by the nand2tetris forums
+*/
+
+class Random {
+    static int seed;
+
+    function void setSeed(int newSeed) {
+        let seed = newSeed;
+        return;
+    }
+
+    //a random number between 0 and 32767
+    function int rand() {
+        let seed = seed + 20251;
+        if seed < 0 {
+            let seed = seed - 32767 - 1;
+        }
+        return seed;
+    }
+
+    // a random number between 0 and range
+    function int randRange(int range) {
+        var int mask
+        var int result;
+        let mask = 1;
+        while (mask < range) {
+            let mask = mask * 2 + 1;
+        }
+        let result = Random.rand() & mask;
+        while (result > range) {
+            let result = Random.rand() & mask;
+        }
+        return result;
+    }
+}
