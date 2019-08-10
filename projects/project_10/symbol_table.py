@@ -29,6 +29,7 @@ class SymbolTable:
         self.subroutine_table = {}
         self.argument_num = 0
         self.var_num = 0
+        self.label_id = 0
 
     def define(self, name, type_name, kind):
         '''
@@ -97,3 +98,10 @@ class SymbolTable:
         return 'CLASS: {class_table}\nSUBROUTINE: {sub_table}'.format(
             class_table=self.class_table,
             sub_table=self.subroutine_table)
+
+    def generate_label(self, label):
+        label = '{label}{id}'.format(
+            label=label,
+            id=self.label_id)
+        self.label_id += 1
+        return label
