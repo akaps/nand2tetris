@@ -275,17 +275,19 @@ class CompilationEngine:
         compiles an if statement
         '''
         if_root = ET.SubElement(root, IF)
+        if_label = self.symbols.generate_label('IF_TRUE')
         else_label = self.symbols.generate_label('IF_FALSE')
-        end_if_label = self.symbols.generate_label('IF_TRUE')
+        end_label = self.symbols.generate_label('IF_END')
         self.add_terminal(if_root, self.stream.keyword())
         self.add_terminal(if_root, self.stream.symbol())
         self.compile_expression(if_root)
-        self.writer.write_arithmetic('not')
-        self.writer.write_if(else_label)
+        self.writer.write_if(if_label)
+        self.writer.write_goto(else_label)
+        self.writer.write_label(if_label)
         self.add_terminal(if_root, self.stream.symbol())
         self.add_terminal(if_root, self.stream.symbol())
         self.compile_statements(if_root)
-        self.writer.write_goto(end_if_label)
+        self.writer.write_goto(end_label)
         self.add_terminal(if_root, self.stream.symbol())
         self.writer.write_label(else_label)
         if self.stream.token_type() == tokenizer.KEYWORD and self.stream.keyword() == 'else':
@@ -293,7 +295,7 @@ class CompilationEngine:
             self.add_terminal(if_root, self.stream.symbol())
             self.compile_statements(if_root)
             self.add_terminal(if_root, self.stream.symbol())
-        self.writer.write_label(end_if_label)
+        self.writer.write_label(end_label)
 
     def compile_expression(self, root):
         '''
@@ -350,7 +352,7 @@ class CompilationEngine:
             self.add_terminal(term_root, keyword)
             if keyword == 'true':
                 self.writer.write_push('constant', 0)
-                self.writer.write_arithmetic('neg')
+                self.writer.write_arithmetic('not')
             elif keyword in ['false', 'null']:
                 self.writer.write_push('constant', 0)
             else:
