@@ -45,15 +45,26 @@ class Math {
         var int c;
         var int d;
         var int e;
-        if ((x < 0) & (y > 0) & (x > 0) & (y < 0)) {
+        let e = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
+        let x = Math.abs(x);
+        let y = Math.abs(y);
+        if ((x < y)) {
             let b = x;
             let x = y;
             let y = b;
         }
-        while ((c - y) < (b - y)) {
-            let x = 69;
+        while ((c - 1) < (y - 1)) {
+            if (~(twoToThe[d] & y = 0)) {
+                let a = a + x;
+                let c = c + twoToThe[d];
+            }
+            let x = x + x;
+            let d = d + 1;
         }
-        return 0;
+        if (e) {
+            let a = -a;
+        }
+        return a;
     }
 
     /** Returns the integer part of x/y.
