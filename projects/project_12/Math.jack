@@ -10,13 +10,13 @@
 class Math {
 
     static Array twoToThe;
-    static Array b;
+    static Array otherArray;
 
 
     /** Initializes the library. */
     function void init() {
         var int index;
-        let b = Array.new(16);
+        let otherArray = Array.new(16);
         let twoToThe = Array.new(16);
         let twoToThe[0] = 1;
         while (index < 15) {
@@ -80,7 +80,31 @@ class Math {
         if (y = 0) {
             do Sys.error(3);
         }
-        return 0;
+        let c = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
+        let otherArray[0] = Math.abs(y);
+        let x = Math.abs(x);
+        while ((a < 15) & (~d)) {
+
+            let d = (32767 - (otherArray[a] - 1)) < (otherArray[a] - 1);
+            if (~(d)) {
+                let otherArray[a + 1] = otherArray[a] + otherArray[a];
+                let d = ((otherArray[a + 1] - 1) > (x - 1));
+                if (~d) {
+                     let a = a + 1;
+                }
+            }
+        }
+        while ((a > -1)) {
+            if (~((otherArray[a] - 1) > (x - 1))) {
+                let b = b + twoToThe[a];
+                let x = x - otherArray[a];
+            }
+            let a = a - 1;
+        }
+        if (c) {
+            let b = -b;
+        }
+        return b;
     }
 
     /** Returns the integer part of the square root of x. */
