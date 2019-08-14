@@ -7,28 +7,74 @@
  * This library provides two services: direct access to the computer's main
  * memory (RAM), and allocation and recycling of memory blocks. The Hack RAM
  * consists of 32,768 words, each holding a 16-bit binary number.
- */ 
+ */
 class Memory {
+
+    static int s0;
 
     /** Initializes the class. */
     function void init() {
+        let s0 = 0;
+        let s0[2048] = 14334; //start of heap
+        let s0[2049] = 2050; // next in linked list
+        return;
     }
 
     /** Returns the RAM value at the given address. */
     function int peek(int address) {
+        return s0[address];
     }
 
     /** Sets the RAM value at the given address to the given value. */
     function void poke(int address, int value) {
+        let s0[address] = value;
+        return;
     }
 
     /** Finds an available RAM block of the given size and returns
      *  a reference to its base address. */
     function int alloc(int size) {
-    }
+        var int l0;
+        if (size < 1) {
+            do Sys.error(5);
+        }
+        let l0 = 2048;
+        while (l0[0] < size) {
+            let l0 = l0[1];
+        }
+        if (l0 + size > 16379) {
+            do Sys.error(6);
+        }
+        if (l0[0] > (size + 2)) {
+            let l0[size + 2] = l0[0] - size - 2;
+            if (l0[1] = (l0 + 2)) {
+                let l0[size + 3] = l0 + size + 4;
+            } else {
+                let l0[size + 3] = l0[1];
+            }
+            let l0[1] = l0 + size + 2;
+        }
+        let l0[0] = 0;
+        return l0 + 2;
+        }
 
     /** De-allocates the given object (cast as an array) by making
      *  it available for future allocations. */
     function void deAlloc(Array o) {
-    }    
+        var Array l0;
+        var Array l1;
+        let l0 = o - 2;
+        let l1 = l0[1];
+        if (l1[0] = 0)  {
+            let l0[0] = l0[1] - l0 - 2;
+        } else {
+            let l0[0] = l0[1] - l0 + l1[0];
+            if (l1[1] = (l1 + 2)) {
+                let l0[1] = l0 + 2;
+            } else {
+                let l0[1] = l1[1];
+            }
+        }
+        return;
+    }
 }
