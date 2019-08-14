@@ -279,9 +279,9 @@ class Output {
     function void printString(String s) {
         var int l0;
         var int l1;
-        let l1 = String.length(s);
+        let l1 = s.length();
         while (l0 < l1) {
-            do Output.printChar(String.charAt(s, l0));
+            do Output.printChar(s.charAt(l0));
             let l0 = l0 + 1;
         }
         return;
@@ -290,7 +290,7 @@ class Output {
     /** Displays the given integer starting at the cursor location,
      *  and advances the cursor appropriately. */
     function void printInt(int i) {
-        do String.setInt(s3, i);
+        do s3.setInt(i);
         do Output.printString(s3);
         return;
     }

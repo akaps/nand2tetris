@@ -96,7 +96,7 @@ class Keyboard {
         var String line;
         var int result;
         let line = Keyboard.readLine(message);
-        let result = String.intValue(line);
+        let result = line.intValue();
         do line.dispose();
         return result;
     }
