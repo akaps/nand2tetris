@@ -295,7 +295,7 @@ class XMLCompiler(CompilationEngine):
 
     def compile_expression_list(self, root):
         '''
-        compiles a (possibly empty) commaseparated list of expressions.
+        compiles a (possibly empty) comma separated list of expressions.
         '''
         expression_list_root = ET.SubElement(root, EXPRESSION_LIST)
         if self.stream.token_type() == tokenizer.SYMBOL and self.stream.symbol() == CLOSE_PAREN:
