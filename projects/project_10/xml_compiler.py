@@ -63,7 +63,6 @@ class XMLCompiler(CompilationEngine):
 
         self.stream.advance()
         assert self.stream.keyword() == 'class'
-        self.compile_class()
 
     def add_terminal(self, root, text):
         terminal = ET.SubElement(root, self.stream.token_type())
@@ -86,6 +85,7 @@ class XMLCompiler(CompilationEngine):
             self.compile_subroutine()
 
         self.add_terminal(self.root, self.stream.symbol())
+        self.write()
 
     def compile_class_var_dec(self):
         '''
