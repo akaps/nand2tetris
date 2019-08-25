@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 
 from tokenizer import JackTokenizer
-from compilation_engine import CompilationEngine
+from xml_compiler import XMLCompiler
 
 JACK = '.jack'
 XML = '.xml'
@@ -12,7 +12,7 @@ def analyze(file_name):
     print('analyzing {file}'.format(file=file_name))
     out_name = file_name.parent.joinpath(file_name.stem + XML)
     tokenizer = JackTokenizer(file_name)
-    engine = CompilationEngine(tokenizer, out_name)
+    engine = XMLCompiler(tokenizer, out_name)
     engine.write()
     print('Successfully analyzed {file} to {output}'.format(file=file_name, output=out_name))
 

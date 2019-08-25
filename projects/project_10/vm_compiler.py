@@ -1,0 +1,2 @@
+class VMCompiler(CompilationEngine):
+    pass
