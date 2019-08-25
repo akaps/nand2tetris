@@ -1,3 +1,42 @@
+#program structure constants
+CLASS = 'class'
+CLASS_VAR_DEC = 'classVarDec'
+CLASS_VARS = ['static', 'field']
+TYPES = ['int', 'char', 'boolean']
+SUBROUTINE_DEC = 'subroutineDec'
+SUBROUTINE_TYPES = ['constructor', 'function', 'method']
+PARAMETER_LIST = 'parameterList'
+SUBROUTINE_BODY = 'subroutineBody'
+VAR_DEC = 'varDec'
+VAR = 'var'
+CLASS_NAME = 'className'
+SUBROUTINE_NAME = 'subroutineName'
+VAR_NAME = 'varName'
+
+#statement constants
+STATEMENTS = 'statements'
+STATEMENT = 'statement'
+LET = 'letStatement'
+IF = 'ifStatement'
+WHILE = 'whileStatement'
+DO = 'doStatement'
+RETURN = 'returnStatement'
+
+#expression constants
+EXPRESSION = 'expression'
+TERM = 'term'
+EXPRESSION_LIST = 'expressionList'
+OPS = ['+', '-', '*', '/', '&', '|', '<', '>', '=']
+UNARY_OPS = ['-', '~']
+KEYWORD_CONSTANTS = ['true', 'false', 'null', 'this']
+
+#character constants
+COMMA = ','
+OPEN_BRACKET = '['
+OPEN_PAREN = '('
+CLOSE_PAREN = ')'
+PERIOD = '.'
+
 def assert_unimplemented(name):
     assert False, 'calling superclass version of {name}'.format(name=name)
 
