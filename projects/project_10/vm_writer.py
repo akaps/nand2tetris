@@ -1,3 +1,8 @@
+def translate(segment):
+    if segment == 'var':
+        return 'local'
+    return segment
+
 '''
 Emits VM commands into a file
 '''
@@ -15,13 +20,13 @@ class VMWriter:
         '''
         Writes a VM push command
         '''
-        self.write_line('push {seg} {index}'.format(seg=segment, index=index))
+        self.write_line('push {seg} {index}'.format(seg=translate(segment), index=index))
 
     def write_pop(self, segment, index):
         '''
         Writes a VM pop command
         '''
-        self.write_line('pop {seg} {index}'.format(seg=segment, index=index))
+        self.write_line('pop {seg} {index}'.format(seg=translate(segment), index=index))
 
     def write_arithmetic(self, command):
         '''
@@ -33,7 +38,7 @@ class VMWriter:
         '''
         Writes a VM label command
         '''
-        self.write_line(label)
+        self.write_line('label {label}'.format(label=label))
 
     def write_goto(self, label):
         '''
