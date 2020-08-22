@@ -10,13 +10,13 @@
 class Math {
 
     static Array twoToThe;
-    static Array otherArray;
+    static Array divisionArray;
 
 
     /** Initializes the library. */
     function void init() {
         var int index;
-        let otherArray = Array.new(16);
+        let divisionArray = Array.new(16);
         let twoToThe = Array.new(16);
         let twoToThe[0] = 1;
         while (index < 15) {
@@ -40,31 +40,31 @@ class Math {
      *  the Jack expressions x*y and multiply(x,y) return the same value.
      */
     function int multiply(int x, int y) {
-        var int a;
-        var int b;
-        var int c;
-        var int d;
-        var int e;
-        let e = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
+        var int l0;
+        var int l1;
+        var int l2;
+        var int l3;
+        var int l4;
+        let l4 = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
         let x = Math.abs(x);
         let y = Math.abs(y);
         if ((x < y)) {
-            let b = x;
+            let l1 = x;
             let x = y;
-            let y = b;
+            let y = l1;
         }
-        while ((c - 1) < (y - 1)) {
-            if (~(twoToThe[d] & y = 0)) {
-                let a = a + x;
-                let c = c + twoToThe[d];
+        while ((l2 - 1) < (y - 1)) {
+            if (~(twoToThe[l3] & y = 0)) {
+                let l0 = l0 + x;
+                let l2 = l2 + twoToThe[l3];
             }
             let x = x + x;
-            let d = d + 1;
+            let l3 = l3 + 1;
         }
-        if (e) {
-            let a = -a;
+        if (l4) {
+            let l0 = -l0;
         }
-        return a;
+        return l0;
     }
 
     /** Returns the integer part of x/y.
@@ -73,59 +73,59 @@ class Math {
      *  the Jack expressions x/y and divide(x,y) return the same value.
      */
     function int divide(int x, int y) {
-        var int a;
-        var int b;
-        var int c;
-        var int d;
+        var int l0;
+        var int l1;
+        var int l2;
+        var int l3;
         if (y = 0) {
             do Sys.error(3);
         }
-        let c = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
-        let otherArray[0] = Math.abs(y);
+        let l2 = ((x < 0) & (y > 0)) | ((x > 0) & (y < 0));
+        let divisionArray[0] = Math.abs(y);
         let x = Math.abs(x);
-        while ((a < 15) & (~d)) {
+        while ((l0 < 15) & (~l3)) {
 
-            let d = (32767 - (otherArray[a] - 1)) < (otherArray[a] - 1);
-            if (~(d)) {
-                let otherArray[a + 1] = otherArray[a] + otherArray[a];
-                let d = ((otherArray[a + 1] - 1) > (x - 1));
-                if (~d) {
-                     let a = a + 1;
+            let l3 = (32767 - (divisionArray[l0] - 1)) < (divisionArray[l0] - 1);
+            if (~(l3)) {
+                let divisionArray[l0 + 1] = divisionArray[l0] + divisionArray[l0];
+                let l3 = ((divisionArray[l0 + 1] - 1) > (x - 1));
+                if (~l3) {
+                     let l0 = l0 + 1;
                 }
             }
         }
-        while ((a > -1)) {
-            if (~((otherArray[a] - 1) > (x - 1))) {
-                let b = b + twoToThe[a];
-                let x = x - otherArray[a];
+        while ((l0 > -1)) {
+            if (~((divisionArray[l0] - 1) > (x - 1))) {
+                let l1 = l1 + twoToThe[l0];
+                let x = x - divisionArray[l0];
             }
-            let a = a - 1;
+            let l0 = l0 - 1;
         }
-        if (c) {
-            let b = -b;
+        if (l2) {
+            let l1 = -l1;
         }
-        return b;
+        return l1;
     }
 
     /** Returns the integer part of the square root of x. */
     function int sqrt(int x) {
-        var int a;
-        var int b;
-        var int c;
-        var int d;
+        var int l0;
+        var int l1;
+        var int l2;
+        var int l3;
         if (x < 0) {
             do Sys.error(4);
         }
-        let a = 7;
-        while (a > -1) {
-            let b = d + twoToThe[a];
-            let c = Math.multiply(b, b);
-            if (~(c > x) & ~(c < 0)) {
-                let d = b;
+        let l0 = 7;
+        while (l0 > -1) {
+            let l1 = l3 + twoToThe[l0];
+            let l2 = Math.multiply(l1, l1);
+            if (~(l2 > x) & ~(l2 < 0)) {
+                let l3 = l1;
             }
-            let a = a -1;
+            let l0 = l0 - 1;
         }
-        return d;
+        return l3;
     }
 
     /** Returns the greater number. */

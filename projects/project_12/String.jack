@@ -83,73 +83,72 @@ class String {
     /** Returns the integer value of this string,
      *  until a non-digit character is detected. */
     method int intValue() {
-        var int a0;
-        var int a1;
-        var int a2;
-        var int a3;
-        var int a4;
+        var int index;
+        var int result;
+        var int shiftedChar;
+        var int isDigit;
+        var int isNegative;
         if (length = 0) {
             return 0;
         }
-        let a3 = ~0;
+        let isDigit = ~0;
         if (string[0] = 45) { //negative string
-            let a4 = ~0;
-            let a0 = 1;
+            let isNegative = ~0;
+            let index = 1;
         }
-        while((a0 < length) & (a3)) {
-            let a2 = string[a0] - 48;
-            let a3 = ~((a2 < 0) | (a2 > 9));
-            if (a3) {
-                let a1 = Math.multiply(a1, 10) + a2;
-                let a0 = a0 + 1;
+        while((index < length) & (isDigit)) {
+            let shiftedChar = string[index] - 48;
+            let isDigit = ~((shiftedChar < 0) | (shiftedChar > 9));
+            if (isDigit) {
+                let result = Math.multiply(result, 10) + shiftedChar;
+                let index = index + 1;
             }
         }
-        if (a4) {
-            let a1 = -a1;
+        if (isNegative) {
+            let result = -result;
         }
-        return a1;
+        return result;
     }
 
     /** Sets this string to hold a representation of the given value. */
     method void setInt(int val) {
-        var int a0;
-        var int a1;
-        var Array a2;
-        var int a3;
+        var int index;
+        var int valDigit;
+        var Array temp;
+        var int isEnd;
         if (arraySize = 0) {
             do Sys.error(19);
         }
-        let a2 = Array.new(6);
+        let temp = Array.new(6);
         if (val < 0) {
-            let a3 = ~0;
+            let isEnd = ~0;
             let val = -val;
         }
-        let a1 = val;
-        while((a1 > 0)) {
-            let a1 = Math.divide(val, 10);
-            let a2[a0] = 48 + (val - Math.multiply(a1, 10));
-            let a0 = a0 + 1;
-            let val = a1;
+        let valDigit = val;
+        while((valDigit > 0)) {
+            let valDigit = Math.divide(val, 10);
+            let temp[index] = 48 + (val - Math.multiply(valDigit, 10));
+            let index = index + 1;
+            let val = valDigit;
         }
-        if (a3) {
-            let a2[a0] = 45;
-            let a0 = a0 + 1;
+        if (isEnd) {
+            let temp[index] = 45;
+            let index = index + 1;
         }
-        //a0 + a2
-        if (arraySize < a0) {
+        if (arraySize < index) {
             do Sys.error(19);
         }
-        if (a0 = 0) {
+        if (index = 0) {
             let string[0] = 48;
             let length = 1;
         } else {
             let length = 0;
-            while (length < a0) {
-                let string[length] = a2[a0 - (length + 1)];
+            while (length < index) {
+                let string[length] = temp[index - (length + 1)];
                 let length = length + 1;
             }
         }
-        do a2.dispose();
+        do temp.dispose();
         return;
     }
 
